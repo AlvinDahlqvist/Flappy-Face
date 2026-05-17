@@ -332,15 +332,11 @@ async function startGame(options) {
   overlayGameOver.classList.remove('new-best');
   document.getElementById('overlay-pause').hidden = true;
   document.getElementById('overlay-tap').hidden = true;
-  const comboEl = document.getElementById('combo');
-  comboEl.hidden = true;
-  comboEl.classList.remove('hot');
 
   if (currentGame) currentGame.stop();
   currentGame = new Game(canvas, {
     ...options,
     onScore: (s) => { document.getElementById('score').textContent = s; },
-    onCombo: (c) => updateComboHud(c),
     onGameOver: ({ score, best, isNew }) => {
       document.getElementById('final-score').textContent = score;
       document.getElementById('final-best').textContent = best ?? loadHighscore();
@@ -350,28 +346,9 @@ async function startGame(options) {
       document.getElementById('gameover-message').textContent = msg;
       overlayGameOver.classList.toggle('new-best', !!isNew);
       overlayGameOver.hidden = false;
-      // hide combo HUD on game end
-      comboEl.hidden = true;
     },
   });
   await currentGame.start();
-}
-
-function updateComboHud(combo) {
-  const comboEl = document.getElementById('combo');
-  const numEl = document.getElementById('combo-num');
-  if (combo < 2) {
-    comboEl.hidden = true;
-    comboEl.classList.remove('hot');
-    return;
-  }
-  comboEl.hidden = false;
-  numEl.textContent = combo;
-  comboEl.classList.toggle('hot', combo >= 10);
-  // retrigger the pulse animation
-  comboEl.style.animation = 'none';
-  void comboEl.offsetWidth;
-  comboEl.style.animation = '';
 }
 
 function wirePlayHud() {

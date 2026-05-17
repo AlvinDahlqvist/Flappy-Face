@@ -62,8 +62,11 @@ export class Game {
     this.dyingTime = 0;
     this.timeElapsed = 0;
     this.combo = 0;
-    this.comboPulse = 0;     // 0..1, kicks to 1 on each score, decays
-    this.deathFlash = 0;     // 0..1, kicks to 1 on die(), decays
+    this.comboPulse = 0;
+    this.deathFlash = 0;
+    this.overlayDelay = 0;
+    this._overlayFired = false;
+    this._gameOverResult = null;
     this.onCombo = this.options.onCombo || (() => {});
   }
 
@@ -148,6 +151,9 @@ export class Game {
     this.combo = 0;
     this.comboPulse = 0;
     this.deathFlash = 0;
+    this.overlayDelay = 0;
+    this._overlayFired = false;
+    this._gameOverResult = null;
     this.onCombo(0);
 
     if (this.options.mode === 'custom' && this.options.level) {
@@ -246,7 +252,22 @@ export class Game {
       return;
     }
 
-    if (this.state === 'over') return;
+    if (this.state === 'over') {
+      // Game is over but we hold off on showing the overlay so the player
+      // sees the shatter + screen shake first.
+      if (this.overlayDelay > 0) {
+        this.overlayDelay -= dt;
+        if (this.overlayDelay <= 0 && !this._overlayFired && this._gameOverResult) {
+          this._overlayFired = true;
+          this.onGameOver({
+            score: this.score,
+            best: this._gameOverResult.best,
+            isNew: this._gameOverResult.isNew,
+          });
+        }
+      }
+      return;
+    }
 
     // ===== playing =====
     this.bird.vy += GRAVITY * dt;
@@ -278,7 +299,7 @@ export class Game {
           y: this.bird.y - 24,
           vy: -90,
           life: 0.7, maxLife: 0.7,
-          font: 'bold 26px "Bungee", "Press Start 2P", system-ui, sans-serif',
+          font: '28px "Bungee", "Press Start 2P", system-ui, sans-serif',
           color: '#ffd166',
         });
         this.onScore(this.score);
@@ -292,7 +313,7 @@ export class Game {
             y: this.viewH * 0.35,
             vy: -60,
             life: 1.6, maxLife: 1.6,
-            font: 'bold 38px "Bungee", "Press Start 2P", system-ui, sans-serif',
+            font: '40px "Bungee", "Press Start 2P", system-ui, sans-serif',
             color: '#ffd166',
           });
           audio.play('milestone');
@@ -308,7 +329,7 @@ export class Game {
             y: this.viewH * 0.55,
             vy: -50,
             life: 1.4, maxLife: 1.4,
-            font: 'bold 30px "Bungee", "Press Start 2P", system-ui, sans-serif',
+            font: '32px "Bungee", "Press Start 2P", system-ui, sans-serif',
             color: '#ef476f',
           });
           audio.play('milestone');
@@ -386,6 +407,9 @@ export class Game {
     this.shake.kick(18);
     this.deathFlash = 1;
     this.bird.vy = Math.max(this.bird.vy, -80);
+    // Persist score / new-best NOW so the overlay later has the right values.
+    this._gameOverResult = saveHighscore(this.score);
+    if (this._gameOverResult.isNew) audio.play('cheer');
     recordCombo(this.combo);
     recordDeath();
     recordScore(this.score);
@@ -398,9 +422,9 @@ export class Game {
       radius: BIRD_RADIUS,
     }, this.birdFragSource || this.assets.bird);
     this.shake.kick(8);
-    const result = saveHighscore(this.score);
-    if (result.isNew) audio.play('cheer');
-    this.onGameOver({ score: this.score, best: result.best, isNew: result.isNew });
+    // The 'over' branch in update() will fire onGameOver after this delay,
+    // giving the player ~600ms to see the fragments fly + screen shake.
+    this.overlayDelay = 0.6;
   }
 
   render() {
@@ -486,7 +510,7 @@ export class Game {
       ctx.scale(scale, scale);
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.font = p.font || 'bold 38px "Bungee", "Press Start 2P", system-ui, sans-serif';
+      ctx.font = p.font || '40px "Bungee", "Press Start 2P", system-ui, sans-serif';
       ctx.lineWidth = 6;
       ctx.strokeStyle = 'rgba(0,0,0,0.7)';
       ctx.strokeText(p.text, 0, 0);
@@ -506,7 +530,7 @@ export class Game {
     ctx.translate(viewW / 2, viewH * 0.42);
     ctx.scale(scale, scale);
     ctx.globalAlpha = alpha;
-    ctx.font = 'bold 96px "Bungee", "Press Start 2P", system-ui, sans-serif';
+    ctx.font = '96px "Bungee", "Press Start 2P", system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.lineWidth = 8;

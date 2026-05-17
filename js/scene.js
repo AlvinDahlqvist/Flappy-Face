@@ -92,25 +92,30 @@ function buildStars(viewW, groundY, count) {
   return stars;
 }
 
-function buildCity(viewW, groundY, baseYFrac, count, randHeight) {
+function buildCity(viewW, groundY, baseYFrac, _unused, randHeight) {
   const buildings = [];
-  let x = -40;
-  while (x < viewW + 80) {
+  // Build a strip that's at least 1.5× viewport wide so the wrapped copy
+  // always covers the right edge no matter the scroll offset.
+  const minStrip = viewW * 1.5;
+  let x = 0;
+  while (x < minStrip) {
     const w = 28 + Math.random() * 50;
     const h = groundY * (baseYFrac + Math.random() * randHeight);
     buildings.push({ x, w, h, windows: Math.random() > 0.4 });
     x += w + 4 + Math.random() * 18;
   }
-  return buildings;
+  return { buildings, totalWidth: x };
 }
 
 function buildBalloons(viewW, groundY, colors) {
   const balloons = [];
   const count = 2 + Math.floor(Math.random() * 2);
+  // Sun / moon occupy roughly groundY * 0.05 .. 0.30 in the upper-right.
+  // Balloons live in a band below that and above the city silhouette.
   for (let i = 0; i < count; i++) {
     balloons.push({
       x: Math.random() * (viewW * 1.5),
-      y: groundY * (0.18 + Math.random() * 0.30),
+      y: groundY * (0.42 + Math.random() * 0.18),
       size: 18 + Math.random() * 14,
       color: colors[Math.floor(Math.random() * colors.length)],
       speed: 8 + Math.random() * 10,
@@ -320,37 +325,50 @@ function drawMoon(ctx, x, y, r, t, theme) {
 
 // ============ CITY ============
 
-function drawCity(ctx, buildings, scrollX, parallaxSpeed, groundY, color, alpha, lit) {
+function drawCity(ctx, city, scrollX, parallaxSpeed, groundY, color, alpha, lit) {
+  const { buildings, totalWidth } = city;
+  // Single shared offset for the whole strip — buildings move together.
+  const raw = (scrollX * parallaxSpeed) % totalWidth;
+  const offset = raw < 0 ? raw + totalWidth : raw;
+
   ctx.save();
   ctx.globalAlpha = alpha;
   ctx.fillStyle = color;
-  const offset = scrollX * parallaxSpeed;
   for (const b of buildings) {
-    const x = b.x - (offset % (b.w + 30));
-    const y = groundY - b.h;
-    ctx.fillRect(x, y, b.w, b.h);
-    // antenna/peak on some buildings
-    if (b.windows && b.w > 35) {
-      ctx.fillRect(x + b.w * 0.4, y - 12, 3, 12);
-    }
+    const x = b.x - offset;
+    drawBuilding(ctx, x, b, groundY);
+    // Wrapped copy so the right edge of the screen is always covered.
+    drawBuilding(ctx, x + totalWidth, b, groundY);
   }
-  // tiny lit windows for night
   if (lit) {
-    ctx.fillStyle = `rgba(255, 220, 130, ${0.4 * alpha})`;
+    ctx.fillStyle = `rgba(255, 220, 130, ${0.55 * alpha})`;
     for (const b of buildings) {
       if (!b.windows) continue;
-      const x = b.x - (offset % (b.w + 30));
-      const y = groundY - b.h;
-      const cols = Math.max(2, Math.floor(b.w / 8));
-      const rows = Math.max(3, Math.floor(b.h / 12));
-      for (let row = 1; row < rows; row += 2) {
-        for (let col = 1; col < cols; col += 2) {
-          ctx.fillRect(x + col * 6 + 2, y + row * 9 + 4, 2, 3);
-        }
-      }
+      const x = b.x - offset;
+      drawWindows(ctx, x, b, groundY);
+      drawWindows(ctx, x + totalWidth, b, groundY);
     }
   }
   ctx.restore();
+}
+
+function drawBuilding(ctx, x, b, groundY) {
+  const y = groundY - b.h;
+  ctx.fillRect(x, y, b.w, b.h);
+  if (b.windows && b.w > 35) {
+    ctx.fillRect(x + b.w * 0.4, y - 12, 3, 12);
+  }
+}
+
+function drawWindows(ctx, x, b, groundY) {
+  const y = groundY - b.h;
+  const cols = Math.max(2, Math.floor(b.w / 8));
+  const rows = Math.max(3, Math.floor(b.h / 12));
+  for (let row = 1; row < rows; row += 2) {
+    for (let col = 1; col < cols; col += 2) {
+      ctx.fillRect(x + col * 6 + 2, y + row * 9 + 4, 2, 3);
+    }
+  }
 }
 
 // ============ BALLOON ============
