@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#1a1a2e" />
+  <title>Flappy Face</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Press+Start+2P&family=Jersey+25&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- MENU SCREEN -->
+  <section id="screen-menu" class="screen active">
+    <div class="ambient-clouds" aria-hidden="true">
+      <div class="ambient-cloud c1"></div>
+      <div class="ambient-cloud c2"></div>
+      <div class="ambient-cloud c3"></div>
+      <div class="ambient-cloud c4"></div>
+      <div class="ambient-cloud c5"></div>
+      <div class="ambient-cloud c6"></div>
+    </div>
+
+    <div class="menu-inner">
+      <div class="hero-bird-wrap">
+        <canvas id="hero-bird" width="220" height="220"></canvas>
+        <div class="hero-bird-platform"></div>
+      </div>
+
+      <h1 class="title" id="menu-title">
+        <span class="ch">F</span><span class="ch">L</span><span class="ch">A</span><span class="ch">P</span><span class="ch">P</span><span class="ch">Y</span>
+        <span class="title-break"></span>
+        <span class="ch accent">F</span><span class="ch accent">A</span><span class="ch accent">C</span><span class="ch accent">E</span>
+      </h1>
+      <p class="subtitle">Upload your face. Flap through chaos.</p>
+
+      <div class="upload-grid">
+        <label class="upload-slot" for="upload-bird">
+          <div class="thumb" id="thumb-bird"><span class="thumb-plus">+</span></div>
+          <span>Your Face</span>
+          <input type="file" id="upload-bird" accept="image/*" capture="environment" hidden />
+        </label>
+        <label class="upload-slot" for="upload-pipe">
+          <div class="thumb" id="thumb-pipe"><span class="thumb-plus">+</span></div>
+          <span>Obstacles</span>
+          <input type="file" id="upload-pipe" accept="image/*" capture="environment" hidden />
+        </label>
+        <label class="upload-slot" for="upload-bg">
+          <div class="thumb" id="thumb-bg"><span class="thumb-plus">+</span></div>
+          <span>Scenery</span>
+          <input type="file" id="upload-bg" accept="image/*" capture="environment" hidden />
+        </label>
+      </div>
+
+      <div class="menu-buttons">
+        <button class="btn primary big" data-go="play-random">SEND IT</button>
+        <button class="btn" data-go="editor">Build a Map</button>
+        <button class="btn" data-go="levels">My Maps</button>
+        <button class="btn" data-go="aviary">Aviary</button>
+        <button class="btn ghost" id="btn-reset-photos">Wipe Photos</button>
+      </div>
+
+      <div class="stats-card" id="stats-card">
+        <div class="stat"><div class="stat-num" id="stat-best">0</div><div class="stat-label">BEST</div></div>
+        <div class="stat"><div class="stat-num" id="stat-combo">0</div><div class="stat-label">STREAK</div></div>
+        <div class="stat"><div class="stat-num" id="stat-games">0</div><div class="stat-label">RUNS</div></div>
+        <div class="stat"><div class="stat-num" id="stat-deaths">0</div><div class="stat-label">CRASHES</div></div>
+      </div>
+
+      <p class="tip" id="tip">Pro tip: keep flapping.</p>
+    </div>
+  </section>
+
+  <!-- PLAY SCREEN -->
+  <section id="screen-play" class="screen">
+    <canvas id="game-canvas"></canvas>
+    <div class="hud">
+      <div class="hud-left">
+        <button class="hud-btn" id="btn-pause">II</button>
+        <button class="hud-btn" id="btn-mute">M</button>
+      </div>
+      <div class="score-stack">
+        <div class="score" id="score">0</div>
+        <div class="combo" id="combo" hidden>x<span id="combo-num">0</span></div>
+      </div>
+      <button class="hud-btn" id="btn-quit">X</button>
+    </div>
+    <div class="overlay" id="overlay-gameover" hidden>
+      <div class="new-best-badge" id="new-best-badge">NEW BEST!</div>
+      <h2 id="gameover-message">Splat.</h2>
+      <p>Score: <span id="final-score">0</span></p>
+      <p>Best: <span id="final-best">0</span></p>
+      <button class="btn primary" id="btn-retry">Run it back</button>
+      <button class="btn" id="btn-back-from-gameover">Back to menu</button>
+    </div>
+    <div class="overlay" id="overlay-pause" hidden>
+      <h2>Paused</h2>
+      <button class="btn primary" id="btn-resume">Resume</button>
+      <button class="btn" id="btn-back-from-pause">Back to menu</button>
+    </div>
+    <div class="overlay tap-hint" id="overlay-tap" hidden>
+      <p>Tap, click, or hit space to flap</p>
+    </div>
+  </section>
+
+  <!-- EDITOR SCREEN -->
+  <section id="screen-editor" class="screen">
+    <canvas id="editor-canvas"></canvas>
+    <div class="editor-toolbar top">
+      <button class="hud-btn" id="ed-back">X</button>
+      <div class="ed-tool-group">
+        <button class="tool-btn active" data-tool="add">+</button>
+        <button class="tool-btn" data-tool="move">M</button>
+        <button class="tool-btn" data-tool="delete">-</button>
+      </div>
+      <button class="hud-btn" id="ed-test">&#9654;</button>
+    </div>
+    <div class="editor-toolbar bottom">
+      <label class="slider-label">Gap
+        <input type="range" id="ed-gap" min="80" max="260" value="150" step="5" />
+      </label>
+      <button class="btn small" id="ed-save">Save</button>
+      <button class="btn small" id="ed-export">Export</button>
+      <label class="btn small" for="ed-import-file">Import
+        <input type="file" id="ed-import-file" accept="application/json,.json" hidden />
+      </label>
+      <button class="btn small ghost" id="ed-clear">Clear</button>
+    </div>
+  </section>
+
+  <!-- AVIARY SCREEN -->
+  <section id="screen-aviary" class="screen">
+    <header class="screen-header">
+      <button class="hud-btn" id="av-back">X</button>
+      <h2>Aviary</h2>
+      <div class="aviary-progress" id="aviary-progress"></div>
+    </header>
+    <div class="aviary-grid" id="aviary-grid"></div>
+  </section>
+
+  <!-- Unlock toast -->
+  <div class="unlock-toast" id="unlock-toast" hidden>
+    <canvas class="unlock-toast-bird" id="unlock-toast-canvas" width="64" height="64"></canvas>
+    <div class="unlock-toast-text">
+      <div class="unlock-toast-label">UNLOCKED!</div>
+      <div class="unlock-toast-name" id="unlock-toast-name">Pink Punk</div>
+    </div>
+  </div>
+
+  <!-- LEVELS SCREEN -->
+  <section id="screen-levels" class="screen">
+    <header class="screen-header">
+      <button class="hud-btn" id="lv-back">X</button>
+      <h2>Your Maps</h2>
+    </header>
+    <ul id="levels-list" class="levels-list"></ul>
+    <p id="levels-empty" class="empty-msg" hidden>No maps yet. Hit "Build a Map" to make one!</p>
+  </section>
+
+  <!-- Save modal -->
+  <div class="modal" id="save-modal" hidden>
+    <div class="modal-inner">
+      <h3>Name this masterpiece</h3>
+      <input type="text" id="save-name" placeholder="e.g. Dad's Nightmare" maxlength="40" />
+      <div class="modal-buttons">
+        <button class="btn" id="save-cancel">Cancel</button>
+        <button class="btn primary" id="save-confirm">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
