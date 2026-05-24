@@ -39,7 +39,27 @@ export function clearPhotos() {
 }
 
 export function loadLevels() {
-  return readJSON(KEY_LEVELS, []);
+  let raw;
+  try { raw = JSON.parse(localStorage.getItem('ff.levels') || '[]'); }
+  catch { raw = []; }
+  return raw.map(l => ({
+    lastPlayedAt: l.lastPlayedAt ?? null,
+    bestScore:    l.bestScore    ?? 0,
+    playCount:    l.playCount    ?? 0,
+    ...l,   // existing fields override defaults if present (preserves saved data)
+  }));
+}
+
+export function recordLevelPlay(name, finalScore) {
+  const all = loadLevels();
+  const idx = all.findIndex(l => l.name === name);
+  if (idx === -1) return;
+  all[idx].lastPlayedAt = Date.now();
+  all[idx].playCount = (all[idx].playCount || 0) + 1;
+  if ((finalScore ?? 0) > (all[idx].bestScore || 0)) {
+    all[idx].bestScore = finalScore;
+  }
+  try { localStorage.setItem('ff.levels', JSON.stringify(all)); } catch {}
 }
 
 export function saveLevel(level) {

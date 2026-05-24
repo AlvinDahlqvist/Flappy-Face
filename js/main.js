@@ -6,6 +6,7 @@ import {
   loadPhotos, clearPhotos, loadHighscore,
   loadLevels, deleteLevel, savePhoto,
   loadSelectedBird, saveSelectedBird, loadUnlocked,
+  recordLevelPlay,
 } from './storage.js';
 import { BIRDS, PHOTO_BIRD_ID, unlockText, getBird, drawWing } from './birds.js';
 import { onUnlock, bootstrapUnlocks, recordTitleClick, isUnlocked, getProgress, consumeRecentUnlocks } from './achievements.js';
@@ -455,6 +456,9 @@ async function startGame(options) {
       c.classList.remove('flash'); void c.offsetWidth; c.classList.add('flash');
     },
     onGameOver: (info) => {
+      if (options.mode === 'custom' && options.level?.name && options.level.name !== '__test__') {
+        recordLevelPlay(options.level.name, info.score);
+      }
       const { score, best, isNew, coins = 0, nearMisses = 0, bestCombo = 0, flaps = 0, durationMs = 0 } = info;
       document.getElementById('final-score').textContent = score;
       document.getElementById('final-best').textContent = best ?? loadHighscore();
