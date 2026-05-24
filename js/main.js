@@ -423,6 +423,7 @@ async function startGame(options) {
   if (currentGame) currentGame.stop();
   currentGame = new Game(canvas, {
     ...options,
+    themeOverride: settings.get('themeLock') !== 'auto' ? settings.get('themeLock') : null,
     onScore: (s) => { document.getElementById('score').textContent = s; },
     onCombo: (streak) => {
       const meter = document.getElementById('combo-meter');
@@ -806,6 +807,61 @@ function wireAviary() {
   document.getElementById('av-back').addEventListener('click', exitToMenu);
 }
 
+// ---------- SETTINGS ----------
+function openSettings() {
+  stopTipRotator();
+  stopHeroBird();
+  stopAviaryAnimations();
+  show('settings');
+  refreshSettingsControls();
+}
+
+function refreshSettingsControls() {
+  document.getElementById('set-volume').value = settings.get('volume');
+  for (const key of ['muted', 'haptics', 'scanlines', 'grain']) {
+    const btn = document.querySelector(`.pix-toggle[data-key="${key}"]`);
+    if (btn) btn.setAttribute('aria-pressed', String(!!settings.get(key)));
+  }
+  document.getElementById('set-reducedMotion').value = String(settings.get('reducedMotion'));
+  document.getElementById('set-themeLock').value = settings.get('themeLock');
+}
+
+function wireSettings() {
+  document.getElementById('settings-back').addEventListener('click', exitToMenu);
+  document.getElementById('btn-settings').addEventListener('click', openSettings);
+
+  document.getElementById('set-volume').addEventListener('input', (e) => {
+    settings.set('volume', Number(e.target.value));
+    if (audio.setGain) audio.setGain(Number(e.target.value));
+  });
+
+  document.querySelectorAll('.pix-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.key;
+      const cur = settings.get(key);
+      settings.set(key, !cur);
+      btn.setAttribute('aria-pressed', String(!cur));
+      if (key === 'muted') audio.setMuted(!cur);
+    });
+  });
+
+  document.getElementById('set-reducedMotion').addEventListener('change', (e) => {
+    const v = e.target.value;
+    settings.set('reducedMotion', v === 'true' ? true : v === 'false' ? false : 'auto');
+  });
+
+  document.getElementById('set-themeLock').addEventListener('change', (e) => {
+    settings.set('themeLock', e.target.value);
+  });
+
+  document.getElementById('settings-reset').addEventListener('click', () => {
+    if (!confirm('Reset EVERYTHING — photos, levels, unlocks, settings?')) return;
+    localStorage.clear();
+    settings.reset();
+    location.reload();
+  });
+}
+
 function stopAviaryAnimations() {
   if (aviaryRafId) cancelAnimationFrame(aviaryRafId);
   aviaryRafId = null;
@@ -1014,6 +1070,9 @@ async function populateMenuGlyphs() {
 // ---------- INIT ----------
 function init() {
   installUiFx();
+  audio.setMuted(settings.get('muted'));
+  audio.ensureContext();
+  if (audio.setGain) audio.setGain(settings.get('volume'));
   bootstrapUnlocks();
   wireUploads();
   wireMenuNav();
@@ -1025,6 +1084,7 @@ function init() {
   wireEditor();
   wireLevels();
   wireAviary();
+  wireSettings();
   wireButtonSounds();
   wireTitleEasterEgg();
   onUnlock((birds) => {

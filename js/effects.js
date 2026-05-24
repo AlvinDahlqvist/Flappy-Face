@@ -12,7 +12,7 @@ export class AudioBus {
   setMuted(m) {
     this.muted = !!m;
     localStorage.setItem(MUTE_KEY, this.muted ? '1' : '0');
-    if (this.master) this.master.gain.value = this.muted ? 0 : 0.5;
+    if (this.master) this.master.gain.value = this.muted ? 0 : (this._gain ?? 0.7);
   }
 
   ensureContext() {
@@ -21,9 +21,14 @@ export class AudioBus {
     if (!Ctor) return null;
     this.ctx = new Ctor();
     this.master = this.ctx.createGain();
-    this.master.gain.value = this.muted ? 0 : 0.5;
+    this.master.gain.value = this._gain ?? 0.7;
     this.master.connect(this.ctx.destination);
     return this.ctx;
+  }
+
+  setGain(v) {
+    this._gain = v;
+    if (this.master) this.master.gain.value = v;
   }
 
   play(name) {
