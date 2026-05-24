@@ -413,10 +413,44 @@ async function startGame(options) {
   document.getElementById('overlay-pause').hidden = true;
   document.getElementById('overlay-tap').hidden = true;
 
+  document.getElementById('hud-coins-num').textContent = '0';
+  document.getElementById('hud-near-num').textContent = '0';
+  document.querySelectorAll('.combo-seg').forEach(s => s.classList.remove('lit', 'lit-2', 'lit-3'));
+  document.getElementById('combo-x').hidden = true;
+
   if (currentGame) currentGame.stop();
   currentGame = new Game(canvas, {
     ...options,
     onScore: (s) => { document.getElementById('score').textContent = s; },
+    onCombo: (streak) => {
+      const meter = document.getElementById('combo-meter');
+      const segs = meter.querySelectorAll('.combo-seg');
+      const x = document.getElementById('combo-x');
+      segs.forEach((s, i) => {
+        s.classList.remove('lit', 'lit-2', 'lit-3');
+        if (i < Math.min(streak, 5)) {
+          s.classList.add(streak >= 15 ? 'lit-3' : streak >= 10 ? 'lit-2' : 'lit');
+        }
+      });
+      x.hidden = streak < 5;
+      x.textContent = streak >= 5 ? `x${streak}` : '';
+      if (streak === 0) {
+        meter.classList.add('broken');
+        setTimeout(() => meter.classList.remove('broken'), 400);
+      }
+    },
+    onCoin: (total) => {
+      const num = document.getElementById('hud-coins-num');
+      num.textContent = total;
+      const c = document.getElementById('hud-coins');
+      c.classList.remove('flash'); void c.offsetWidth; c.classList.add('flash');
+    },
+    onNearMiss: (total) => {
+      const num = document.getElementById('hud-near-num');
+      num.textContent = total;
+      const c = document.getElementById('hud-near');
+      c.classList.remove('flash'); void c.offsetWidth; c.classList.add('flash');
+    },
     onGameOver: (info) => {
       const { score, best, isNew, coins = 0, nearMisses = 0, bestCombo = 0, flaps = 0, durationMs = 0 } = info;
       document.getElementById('final-score').textContent = score;

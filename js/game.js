@@ -68,6 +68,8 @@ export class Game {
     this._overlayFired = false;
     this._gameOverResult = null;
     this.onCombo = this.options.onCombo || (() => {});
+    this.onCoin = this.options.onCoin || (() => {});
+    this.onNearMiss = this.options.onNearMiss || (() => {});
     // depth pass additions
     this.trail = [];          // array of { x, y, rot, squashX, squashY, life }
     this.coins = [];          // { x, y, vx, vy, collected, bob }
@@ -411,6 +413,7 @@ export class Game {
         p.nearMissed = true;
         this.lastNearMissPipeId = p.id;
         this.nearMisses += 1;
+        this.onNearMiss(this.nearMisses);
         this.score += 2;            // bonus for risk
         audio.play('hover');        // quick whoosh
         this.shake.kick(3);
@@ -467,6 +470,7 @@ export class Game {
       if (dist < PICKUP_R) {
         c.collected = true;
         this.coinsCollected += 1;
+        this.onCoin(this.coinsCollected);
         this.score += 5;
         this.shake.kick(3);
         audio.play('score');
