@@ -958,7 +958,7 @@ function renderAviary() {
     });
   }
 
-  allEntries.forEach((entry, index) => {
+  function makeCard(entry, index) {
     const card = document.createElement('div');
     card.className = 'bird-card';
     if (!entry.unlocked) card.classList.add('locked');
@@ -970,7 +970,6 @@ function renderAviary() {
     tileCanvas.height = 80 * dpr;
     card.appendChild(tileCanvas);
 
-    // Register tile for continuous animation
     const tile = {
       ctx: tileCanvas.getContext('2d'),
       entry,
@@ -993,7 +992,6 @@ function renderAviary() {
     cond.textContent = entry.unlocked ? entry.desc : (entry.bird ? unlockText(entry.bird.unlock) : '');
     card.appendChild(cond);
 
-    // Progress bar for locked birds (skip "default" type, which has no progress)
     if (!entry.unlocked && entry.bird) {
       const progress = getProgress(entry.bird.unlock);
       if (progress) {
@@ -1036,12 +1034,13 @@ function renderAviary() {
     }
     grid.appendChild(card);
 
+    // Tilt (from Task 5.1)
     let tiltRaf = 0;
     card.addEventListener('pointermove', (e) => {
       const r = card.getBoundingClientRect();
-      const x = (e.clientX - r.left) / r.width;   // 0..1
+      const x = (e.clientX - r.left) / r.width;
       const y = (e.clientY - r.top) / r.height;
-      const rx = (0.5 - y) * 8;   // deg
+      const rx = (0.5 - y) * 8;
       const ry = (x - 0.5) * 8;
       cancelAnimationFrame(tiltRaf);
       tiltRaf = requestAnimationFrame(() => {
@@ -1052,7 +1051,31 @@ function renderAviary() {
       cancelAnimationFrame(tiltRaf);
       card.style.transform = '';
     });
-  });
+  }
+
+  const groups = { face: [], earned: [], locked: [] };
+  for (const e of allEntries) {
+    if (e.isPhoto) groups.face.push(e);
+    else if (e.unlocked) groups.earned.push(e);
+    else groups.locked.push(e);
+  }
+  const order = [
+    { key: 'face',   label: 'YOUR FACE' },
+    { key: 'earned', label: 'EARNED' },
+    { key: 'locked', label: 'LOCKED' },
+  ];
+
+  let idx = 0;
+  for (const { key, label } of order) {
+    if (!groups[key].length) continue;
+    const h = document.createElement('div');
+    h.className = 'aviary-group-header';
+    h.textContent = label;
+    grid.appendChild(h);
+    for (const entry of groups[key]) {
+      makeCard(entry, idx++);
+    }
+  }
 
   const total = Object.keys(BIRDS).length;
   const unlockedCount = Object.values(BIRDS).filter(b => unlockedIds.has(b.id)).length;

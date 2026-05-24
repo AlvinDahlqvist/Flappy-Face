@@ -26,6 +26,15 @@
   flex: 1;
   perspective: 800px;
 }
+.aviary-group-header {
+  grid-column: 1 / -1;
+  font-family: var(--font-pixel);
+  font-size: 12px;
+  letter-spacing: 3px;
+  color: var(--ink);
+  padding: 12px 4px 4px;
+  border-bottom: 3px dashed rgba(29,43,74,0.3);
+}
 
 .bird-card {
   position: relative;
