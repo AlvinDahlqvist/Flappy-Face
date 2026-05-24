@@ -21,6 +21,8 @@ export class Editor {
     this.assets = { bird: null, pipe: null, bg: null };
     this.showGrid = true;
     this.snapToGrid = true;
+    this.undoStack = [];
+    this.redoStack = [];
   }
 
   async start(initial) {
@@ -66,7 +68,23 @@ export class Editor {
       created: Date.now(),
     };
   }
-  clear() { this.obstacles = []; }
+  clear() { this.snapshot(); this.obstacles = []; }
+
+  snapshot() {
+    this.undoStack.push(JSON.stringify(this.obstacles));
+    if (this.undoStack.length > 30) this.undoStack.shift();
+    this.redoStack.length = 0;
+  }
+  undo() {
+    if (!this.undoStack.length) return;
+    this.redoStack.push(JSON.stringify(this.obstacles));
+    this.obstacles = JSON.parse(this.undoStack.pop());
+  }
+  redo() {
+    if (!this.redoStack.length) return;
+    this.undoStack.push(JSON.stringify(this.obstacles));
+    this.obstacles = JSON.parse(this.redoStack.pop());
+  }
   loadObstacles(list, gap) {
     this.obstacles = list.map(o => ({ ...o }));
     if (gap) this.gap = gap;
@@ -84,6 +102,7 @@ export class Editor {
     if (this.tool === 'move') {
       const hit = this.findObstacleAt(worldX, p.y);
       if (hit) {
+        this.snapshot();
         this.dragging = { obstacle: hit, offsetX: hit.x - worldX, offsetY: hit.gapY - p.y };
         return this.dragging;
       }
@@ -117,17 +136,24 @@ export class Editor {
         gapY = Math.round(gapY / 40) * 40;
         gapY = clamp(gapY, this.gap / 2 + 30, this.groundY - this.gap / 2 - 30);
       }
+      this.snapshot();
       this.obstacles.push({ x, gapY });
     } else if (this.tool === 'delete') {
       const hit = this.findObstacleAt(worldX, p.y);
-      if (hit) this.obstacles = this.obstacles.filter(o => o !== hit);
+      if (hit) {
+        this.snapshot();
+        this.obstacles = this.obstacles.filter(o => o !== hit);
+      }
     }
   }
 
   handleLongPress(p) {
     const worldX = p.x + this.scrollX;
     const hit = this.findObstacleAt(worldX, p.y);
-    if (hit) this.obstacles = this.obstacles.filter(o => o !== hit);
+    if (hit) {
+      this.snapshot();
+      this.obstacles = this.obstacles.filter(o => o !== hit);
+    }
   }
 
   findObstacleAt(worldX, y) {

@@ -730,6 +730,18 @@ function wireEditor() {
     currentEditor.clear();
   });
 
+  document.getElementById('ed-undo').addEventListener('click', () => currentEditor?.undo());
+  document.getElementById('ed-redo').addEventListener('click', () => currentEditor?.redo());
+
+  window.addEventListener('keydown', (e) => {
+    if (!currentEditor) return;
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+      e.preventDefault();
+      if (e.shiftKey) currentEditor.redo();
+      else currentEditor.undo();
+    }
+  });
+
   document.getElementById('save-cancel').addEventListener('click', () => {
     document.getElementById('save-modal').hidden = true;
   });
