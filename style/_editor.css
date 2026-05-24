@@ -67,3 +67,24 @@
   border-radius: 10px;
 }
 .slider-label input[type="range"] { width: 110px; }
+
+.ed-mini {
+  border: 2px solid var(--frame-dark);
+  border-radius: 2px;
+  width: 160px;
+  height: 60px;
+  image-rendering: pixelated;
+  cursor: pointer;
+  background: #0d1b3d;
+}
+.ed-meta {
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  color: var(--text);
+  background: var(--panel);
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+.editor-toolbar.top {
+  flex-wrap: wrap;
+}

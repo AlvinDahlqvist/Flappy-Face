@@ -176,18 +176,25 @@
   <section id="screen-editor" class="screen">
     <canvas id="editor-canvas"></canvas>
     <div class="editor-toolbar top">
-      <button class="hud-btn" id="ed-back">X</button>
+      <button class="hud-btn" id="ed-back" data-glyph="close" aria-label="Back"></button>
       <div class="ed-tool-group">
         <button class="tool-btn active" data-tool="add">+</button>
         <button class="tool-btn" data-tool="move">M</button>
         <button class="tool-btn" data-tool="delete">-</button>
       </div>
+      <div class="ed-tool-group">
+        <button class="hud-btn" id="ed-undo" data-glyph="undo" aria-label="Undo"></button>
+        <button class="hud-btn" id="ed-redo" data-glyph="redo" aria-label="Redo"></button>
+        <button class="hud-btn" id="ed-grid" data-glyph="grid" aria-label="Grid"></button>
+      </div>
+      <canvas class="ed-mini" id="ed-mini" width="160" height="60"></canvas>
       <button class="hud-btn" id="ed-test">&#9654;</button>
     </div>
     <div class="editor-toolbar bottom">
       <label class="slider-label">Gap
         <input type="range" id="ed-gap" min="80" max="260" value="150" step="5" />
       </label>
+      <span class="ed-meta" id="ed-meta">0 pipes · EASY</span>
       <button class="btn small" id="ed-save">Save</button>
       <button class="btn small" id="ed-export">Export</button>
       <label class="btn small" for="ed-import-file">Import

@@ -675,6 +675,11 @@ function setTool(t) {
 
 function wireEditor() {
   document.getElementById('ed-back').addEventListener('click', exitToMenu);
+  document.getElementById('ed-grid').addEventListener('click', () => {
+    if (!currentEditor) return;
+    currentEditor.showGrid = !currentEditor.showGrid;
+    currentEditor.snapToGrid = currentEditor.showGrid;
+  });
   document.querySelectorAll('.tool-btn').forEach(b => {
     b.addEventListener('click', () => setTool(b.dataset.tool));
   });

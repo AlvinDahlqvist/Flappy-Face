@@ -19,6 +19,8 @@ export class Editor {
     this.rafId = null;
     this.disposers = [];
     this.assets = { bird: null, pipe: null, bg: null };
+    this.showGrid = true;
+    this.snapToGrid = true;
   }
 
   async start(initial) {
@@ -108,8 +110,14 @@ export class Editor {
   handleTap(p) {
     const worldX = p.x + this.scrollX;
     if (this.tool === 'add') {
-      const gapY = clamp(p.y, this.gap / 2 + 30, this.groundY - this.gap / 2 - 30);
-      this.obstacles.push({ x: worldX, gapY });
+      let x = worldX;
+      let gapY = clamp(p.y, this.gap / 2 + 30, this.groundY - this.gap / 2 - 30);
+      if (this.snapToGrid) {
+        x = Math.round(x / 40) * 40;
+        gapY = Math.round(gapY / 40) * 40;
+        gapY = clamp(gapY, this.gap / 2 + 30, this.groundY - this.gap / 2 - 30);
+      }
+      this.obstacles.push({ x, gapY });
     } else if (this.tool === 'delete') {
       const hit = this.findObstacleAt(worldX, p.y);
       if (hit) this.obstacles = this.obstacles.filter(o => o !== hit);
@@ -152,13 +160,17 @@ export class Editor {
       ctx.fillRect(0, 0, viewW, viewH);
     }
 
-    // grid hint
-    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-    ctx.lineWidth = 1;
-    for (let x = -this.scrollX % 100; x < viewW; x += 100) {
-      ctx.beginPath();
-      ctx.moveTo(x, 0); ctx.lineTo(x, this.groundY);
-      ctx.stroke();
+    // grid overlay
+    if (this.showGrid) {
+      const grid = 40;
+      ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+      ctx.lineWidth = 1;
+      for (let x = -(this.scrollX % grid); x < viewW; x += grid) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, viewH); ctx.stroke();
+      }
+      for (let y = 0; y < viewH; y += grid) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(viewW, y); ctx.stroke();
+      }
     }
 
     // obstacles
