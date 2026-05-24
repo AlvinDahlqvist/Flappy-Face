@@ -1,58 +1,73 @@
-/* style/_levels.css — levels list screen styles */
+/* style/_levels.css */
 
-#screen-levels { background: var(--bg); padding-top: env(safe-area-inset-top); }
-
+#screen-levels {
+  background: linear-gradient(180deg, var(--sky-top), var(--sky-bottom));
+  padding-top: env(safe-area-inset-top);
+  color: var(--ink);
+}
 .screen-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+  display: flex; align-items: center; gap: 12px;
   padding: 12px;
 }
 .screen-header h2 {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 28px;
+  font-size: 26px;
   letter-spacing: 1px;
 }
-
-.levels-list {
-  list-style: none;
-  margin: 0;
-  padding: 0 12px 24px;
-  overflow-y: auto;
-  flex: 1;
+.levels-sort {
+  display: flex; gap: 6px; padding: 0 12px 8px;
 }
-
-.level-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px;
-  background: var(--bg-2);
-  border-radius: 14px;
-  margin-bottom: 10px;
-  box-shadow: 0 3px 0 rgba(0,0,0,0.3);
-}
-.level-item .name {
-  flex: 1;
-  font-family: var(--font-game);
-  font-size: 20px;
-  letter-spacing: 0.5px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.level-item .meta {
-  color: var(--muted);
+.sort-chip {
   font-family: var(--font-pixel);
   font-size: 10px;
   letter-spacing: 1px;
+  padding: 6px 10px;
+  border: 2px solid var(--frame-dark);
+  border-radius: 4px;
+  background: var(--panel-light);
+  color: var(--ink);
+  cursor: pointer;
 }
+.sort-chip.active { background: var(--accent); }
+
+.levels-list { list-style: none; margin: 0; padding: 0 12px 24px; overflow-y: auto; flex: 1; }
+
+.level-item {
+  display: grid;
+  grid-template-columns: 64px 1fr auto;
+  gap: 10px;
+  padding: 10px;
+  background: var(--panel-light);
+  border: 3px solid var(--frame-dark);
+  border-radius: 4px;
+  margin-bottom: 8px;
+  box-shadow: var(--pix-shadow-1);
+  align-items: center;
+}
+.level-thumb { width: 64px; height: 48px; border: 2px solid var(--frame-dark); border-radius: 2px; image-rendering: pixelated; }
+.level-meta { min-width: 0; }
+.level-meta .name {
+  font-family: var(--font-pixel);
+  font-size: 12px;
+  letter-spacing: 1px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  color: var(--ink);
+}
+.level-meta .stats {
+  font-family: var(--font-pixel);
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: rgba(29,43,74,0.7);
+  margin-top: 2px;
+}
+.level-meta .best { color: var(--accent-2); }
+.level-actions { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
 
 .empty-msg {
-  color: var(--muted);
+  color: var(--ink);
   text-align: center;
   padding: 24px;
-  font-family: var(--font-game);
-  font-size: 18px;
+  font-family: var(--font-pixel);
+  font-size: 12px;
 }

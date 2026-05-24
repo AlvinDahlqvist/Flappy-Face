@@ -748,46 +748,78 @@ function openLevels() {
   show('levels');
 }
 
+let levelSort = 'newest';
+
 function refreshLevelsList() {
   const list = document.getElementById('levels-list');
   const empty = document.getElementById('levels-empty');
   const levels = loadLevels();
   list.innerHTML = '';
-  if (levels.length === 0) {
-    empty.hidden = false;
-    return;
-  }
+  if (levels.length === 0) { empty.hidden = false; return; }
   empty.hidden = true;
-  for (const level of levels) {
+
+  const sorted = [...levels].sort((a, b) => {
+    if (levelSort === 'newest') return (b.lastPlayedAt || 0) - (a.lastPlayedAt || 0);
+    if (levelSort === 'best')   return (b.bestScore || 0)   - (a.bestScore || 0);
+    if (levelSort === 'hardest') {
+      return (a.gap || 999) - (b.gap || 999) || (b.obstacles.length - a.obstacles.length);
+    }
+    return 0;
+  });
+
+  for (const level of sorted) {
     const li = document.createElement('li');
     li.className = 'level-item';
-    li.innerHTML = `
-      <div style="flex:1; min-width: 0">
-        <div class="name"></div>
-        <div class="meta">${level.obstacles.length} pipes · gap ${level.gap}</div>
-      </div>
+    const thumb = document.createElement('canvas');
+    thumb.className = 'level-thumb';
+    thumb.width = 64; thumb.height = 48;
+
+    li.appendChild(thumb);
+    const meta = document.createElement('div');
+    meta.className = 'level-meta';
+    const last = level.lastPlayedAt ? new Date(level.lastPlayedAt).toLocaleDateString() : 'Never played';
+    meta.innerHTML = `
+      <div class="name"></div>
+      <div class="stats">${level.obstacles.length} pipes · gap ${level.gap} · <span class="diff"></span> · <span class="best">★ ${level.bestScore || 0}</span> · ${last}</div>
+    `;
+    meta.querySelector('.name').textContent = level.name;
+    li.appendChild(meta);
+
+    const actions = document.createElement('div');
+    actions.className = 'level-actions';
+    actions.innerHTML = `
       <button class="btn small primary" data-action="play">Play</button>
       <button class="btn small" data-action="edit">Edit</button>
       <button class="btn small" data-action="export">Export</button>
       <button class="btn small ghost" data-action="delete">X</button>
     `;
-    li.querySelector('.name').textContent = level.name;
-    li.querySelector('[data-action="play"]').addEventListener('click', () => {
-      startGame({ mode: 'custom', level });
+    li.appendChild(actions);
+    list.appendChild(li);
+
+    import('./level-thumbnail.js').then(({ renderLevelThumbnail, difficultyOf }) => {
+      renderLevelThumbnail(level, thumb);
+      meta.querySelector('.diff').textContent = difficultyOf(level);
     });
-    li.querySelector('[data-action="edit"]').addEventListener('click', () => {
-      openEditor(level);
-    });
-    li.querySelector('[data-action="export"]').addEventListener('click', () => {
-      exportLevel(level);
-    });
-    li.querySelector('[data-action="delete"]').addEventListener('click', () => {
+
+    actions.querySelector('[data-action="play"]').addEventListener('click', () => startGame({ mode: 'custom', level }));
+    actions.querySelector('[data-action="edit"]').addEventListener('click', () => openEditor(level));
+    actions.querySelector('[data-action="export"]').addEventListener('click', () => exportLevel(level));
+    actions.querySelector('[data-action="delete"]').addEventListener('click', () => {
       if (!confirm(`Delete "${level.name}"?`)) return;
       deleteLevel(level.name);
       refreshLevelsList();
     });
-    list.appendChild(li);
   }
+}
+
+function wireSortChips() {
+  document.querySelectorAll('.sort-chip').forEach(c => {
+    c.addEventListener('click', () => {
+      levelSort = c.dataset.sort;
+      document.querySelectorAll('.sort-chip').forEach(o => o.classList.toggle('active', o === c));
+      refreshLevelsList();
+    });
+  });
 }
 
 function wireLevels() {
@@ -1147,6 +1179,7 @@ function init() {
   wirePlayHud();
   wireEditor();
   wireLevels();
+  wireSortChips();
   wireAviary();
   wireSettings();
   wireButtonSounds();
