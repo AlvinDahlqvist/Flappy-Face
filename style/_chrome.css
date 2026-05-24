@@ -73,3 +73,10 @@
   flex-shrink: 0;
 }
 .icon svg { width: 100%; height: 100%; display: block; }
+
+/* Press Start 2P is rendered tighter; reduce line-height & letter-spacing
+   so it doesn't blow up vertical rhythm. */
+.btn, .hud-btn, .tool-btn, .stat-num, .score-label, .run-stat-icon, .run-stat-value, .bird-name, .empty-msg {
+  font-family: var(--font-pixel);
+  line-height: 1.1;
+}
