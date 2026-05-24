@@ -8,7 +8,7 @@ import {
   loadSelectedBird, saveSelectedBird, loadUnlocked,
 } from './storage.js';
 import { BIRDS, PHOTO_BIRD_ID, unlockText, getBird, drawWing } from './birds.js';
-import { onUnlock, bootstrapUnlocks, recordTitleClick, isUnlocked, getProgress } from './achievements.js';
+import { onUnlock, bootstrapUnlocks, recordTitleClick, isUnlocked, getProgress, consumeRecentUnlocks } from './achievements.js';
 import { loadStats } from './storage.js';
 import { settings } from './settings.js';
 import { installUiFx, stampReveal, spawnConfettiAt } from './ui-fx.js';
@@ -477,10 +477,42 @@ async function startGame(options) {
           spawnConfettiAt(currentGame.particles, rect, 48);
         }
         animateRunSummary({ coins, nearMisses, bestCombo, flaps, durationMs });
+        renderInlineUnlock();
       });
     },
   });
   await currentGame.start();
+}
+
+function renderInlineUnlock() {
+  const card = document.getElementById('unlock-inline');
+  const recent = consumeRecentUnlocks();
+  if (recent.length === 0) { card.hidden = true; return; }
+  const bird = recent[0];   // show first; toast shows the rest as before
+  const canvas = document.getElementById('unlock-inline-canvas');
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = 64 * dpr;
+  canvas.height = 64 * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, 64, 64);
+  ctx.translate(32, 35);
+  bird.draw(ctx, 22);
+  document.getElementById('unlock-inline-name').textContent = bird.name;
+  card.hidden = false;
+
+  // Equip button
+  const equipBtn = document.getElementById('unlock-inline-equip');
+  equipBtn.onclick = () => {
+    saveSelectedBird(bird.id);
+    equipBtn.textContent = 'EQUIPPED';
+    equipBtn.disabled = true;
+  };
+
+  // Toast the remaining unlocks (they keep the toast behaviour)
+  for (let i = 1; i < recent.length; i++) {
+    setTimeout(() => showUnlockToast(recent[i]), (i - 1) * 3000);
+  }
 }
 
 function animateRunSummary({ coins, nearMisses, bestCombo, flaps, durationMs }) {
@@ -957,7 +989,9 @@ function init() {
   wireButtonSounds();
   wireTitleEasterEgg();
   onUnlock((birds) => {
-    // Toast newly-unlocked birds one at a time
+    const overlay = document.getElementById('overlay-gameover');
+    const inGame = currentGame && overlay.hidden;
+    if (inGame) return;   // will be shown via consumeRecentUnlocks() on game-over
     let delay = 0;
     for (const b of birds) {
       setTimeout(() => showUnlockToast(b), delay);

@@ -1,6 +1,8 @@
 import { loadStats, saveStats, loadUnlocked, saveUnlocked } from './storage.js';
 import { BIRDS } from './birds.js';
 
+let recentUnlocks = [];
+
 // Listeners get { birds: [...newlyUnlockedBird] } when something unlocks
 const listeners = new Set();
 export function onUnlock(fn) {
@@ -10,9 +12,16 @@ export function onUnlock(fn) {
 
 function notify(birds) {
   if (!birds.length) return;
+  recentUnlocks.push(...birds);
   for (const fn of listeners) {
     try { fn(birds); } catch (e) { console.error(e); }
   }
+}
+
+export function consumeRecentUnlocks() {
+  const list = recentUnlocks.slice();
+  recentUnlocks = [];
+  return list;
 }
 
 function meetsCondition(unlock, stats) {
