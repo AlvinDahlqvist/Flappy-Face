@@ -104,7 +104,7 @@ function refreshStatsCard() {
   const best = loadHighscore();
   rollNumber(document.getElementById('stat-best'), best);
   rollNumber(document.getElementById('stat-combo'), stats.bestCombo || 0);
-  rollNumber(document.getElementById('stat-games'), stats.gamesPlayed || 0);
+  rollNumber(document.getElementById('stat-runs'), stats.gamesPlayed || 0);
   rollNumber(document.getElementById('stat-deaths'), stats.deaths || 0);
 }
 
@@ -220,6 +220,79 @@ function wireMenuNav() {
       else if (target === 'levels') openLevels();
       else if (target === 'aviary') openAviary();
     });
+  });
+}
+
+function wireCatTiles() {
+  const tiles  = document.querySelectorAll('.cat-tile');
+  const panel  = document.getElementById('cat-panel');
+  const panels = panel.querySelectorAll('[data-panel]');
+  let openCat = null;
+
+  function setOpen(cat) {
+    openCat = cat;
+    tiles.forEach(t => t.classList.toggle('expanded', t.dataset.cat === cat));
+    panels.forEach(p => p.classList.toggle('active', p.dataset.panel === cat));
+    panel.hidden = !cat;
+  }
+
+  tiles.forEach(t => {
+    t.addEventListener('click', () => {
+      const cat = t.dataset.cat;
+      if (cat === 'birds') {        // direct nav, no panel
+        setOpen(null);
+        openAviary();
+        return;
+      }
+      setOpen(openCat === cat ? null : cat);
+    });
+  });
+
+  // collapse panel when a sub-action is taken
+  panel.addEventListener('click', (e) => {
+    if (e.target.closest('[data-go], #upload-import')) setOpen(null);
+  });
+}
+
+function wireCustomizeDrawer() {
+  const drawer = document.getElementById('customize-drawer');
+  const toggle = document.getElementById('customize-toggle');
+  const body   = drawer.querySelector('.customize-body');
+  const KEY    = 'ff.menu.customizeOpen';
+
+  function setOpen(open) {
+    drawer.toggleAttribute('data-open', open);
+    body.hidden = !open;
+    toggle.setAttribute('aria-expanded', String(open));
+    try { localStorage.setItem(KEY, open ? '1' : '0'); } catch {}
+  }
+  toggle.addEventListener('click', () => setOpen(body.hidden));
+
+  // Initial state from storage
+  let open = false;
+  try { open = localStorage.getItem(KEY) === '1'; } catch {}
+  setOpen(open);
+}
+
+function wireMenuImport() {
+  const input = document.getElementById('upload-import');
+  if (!input) return;
+  input.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const level = await importLevelFile(file);
+      if (level.photos) {
+        for (const slot of ['bird', 'pipe', 'bg']) {
+          if (level.photos[slot]) savePhoto(slot, level.photos[slot]);
+        }
+      }
+      await openEditor(level);
+    } catch (err) {
+      alert(`Could not import: ${err.message}`);
+    } finally {
+      e.target.value = '';
+    }
   });
 }
 
@@ -809,12 +882,24 @@ function showUnlockToast(bird) {
   toastTimer = setTimeout(() => { toast.hidden = true; }, 2800);
 }
 
+async function populateMenuGlyphs() {
+  const { iconSvg } = await import('./icons.js');
+  document.querySelectorAll('[data-glyph]').forEach(el => {
+    el.innerHTML = '';
+    el.appendChild(iconSvg(el.dataset.glyph));
+  });
+}
+
 // ---------- INIT ----------
 function init() {
   installUiFx();
   bootstrapUnlocks();
   wireUploads();
   wireMenuNav();
+  wireCatTiles();
+  wireCustomizeDrawer();
+  wireMenuImport();
+  populateMenuGlyphs();
   wirePlayHud();
   wireEditor();
   wireLevels();
