@@ -207,6 +207,69 @@
     <div class="aviary-grid" id="aviary-grid"></div>
   </section>
 
+  <!-- SETTINGS SCREEN -->
+  <section id="screen-settings" class="screen">
+    <header class="screen-header">
+      <button class="hud-btn" id="settings-back" data-glyph="close" aria-label="Back"></button>
+      <h2>SETTINGS</h2>
+    </header>
+    <div class="settings-body">
+      <section class="settings-group pix-frame">
+        <h3>SOUND</h3>
+        <div class="setting-row">
+          <label for="set-volume">Volume</label>
+          <input type="range" id="set-volume" min="0" max="1" step="0.01" />
+        </div>
+        <div class="setting-row">
+          <label for="set-muted">Mute</label>
+          <button class="pix-toggle" id="set-muted" data-key="muted"></button>
+        </div>
+      </section>
+
+      <section class="settings-group pix-frame">
+        <h3>FEEL</h3>
+        <div class="setting-row">
+          <label for="set-haptics">Haptics (mobile)</label>
+          <button class="pix-toggle" id="set-haptics" data-key="haptics"></button>
+        </div>
+        <div class="setting-row">
+          <label for="set-scanlines">Scanlines</label>
+          <button class="pix-toggle" id="set-scanlines" data-key="scanlines"></button>
+        </div>
+        <div class="setting-row">
+          <label for="set-grain">Grain</label>
+          <button class="pix-toggle" id="set-grain" data-key="grain"></button>
+        </div>
+        <div class="setting-row">
+          <label for="set-reducedMotion">Reduced motion</label>
+          <select id="set-reducedMotion" class="pix-select">
+            <option value="auto">Auto</option>
+            <option value="true">On</option>
+            <option value="false">Off</option>
+          </select>
+        </div>
+      </section>
+
+      <section class="settings-group pix-frame">
+        <h3>GAME</h3>
+        <div class="setting-row">
+          <label for="set-themeLock">Theme</label>
+          <select id="set-themeLock" class="pix-select">
+            <option value="auto">Auto (random)</option>
+            <option value="day">Day</option>
+            <option value="dusk">Dusk</option>
+            <option value="night">Night</option>
+          </select>
+        </div>
+      </section>
+
+      <section class="settings-group pix-frame settings-danger">
+        <h3>DANGER</h3>
+        <button class="btn ghost" id="settings-reset">RESET ALL DATA</button>
+      </section>
+    </div>
+  </section>
+
   <!-- Unlock toast -->
   <div class="unlock-toast" id="unlock-toast" hidden>
     <canvas class="unlock-toast-bird" id="unlock-toast-canvas" width="64" height="64"></canvas>

@@ -30,6 +30,7 @@ const screens = {
   editor: document.getElementById('screen-editor'),
   levels: document.getElementById('screen-levels'),
   aviary: document.getElementById('screen-aviary'),
+  settings: document.getElementById('screen-settings'),
 };
 
 let currentGame = null;
