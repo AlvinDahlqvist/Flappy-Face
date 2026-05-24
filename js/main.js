@@ -644,6 +644,7 @@ function wirePlayHud() {
 
 function exitToMenu() {
   if (currentGame) { currentGame.stop(); currentGame = null; }
+  if (currentEditor?._miniRaf) cancelAnimationFrame(currentEditor._miniRaf);
   if (currentEditor) { currentEditor.stop(); currentEditor = null; }
   pendingLevel = null;
   refreshMenu();
@@ -664,6 +665,31 @@ async function openEditor(initial) {
   await currentEditor.start(initial);
   document.getElementById('ed-gap').value = currentEditor.gap;
   setTool('add');
+
+  const mini = document.getElementById('ed-mini');
+  mini.addEventListener('click', (e) => {
+    if (!currentEditor) return;
+    const r = mini.getBoundingClientRect();
+    const ratio = (e.clientX - r.left) / r.width;
+    // Estimate total width: max obstacle X + a buffer
+    const xs = currentEditor.obstacles.map(o => o.x);
+    const maxX = xs.length ? Math.max(...xs) + 200 : 800;
+    currentEditor.scrollX = ratio * maxX;
+  });
+
+  // Periodic mini-preview refresh while editor is open
+  const renderMini = () => {
+    if (!currentEditor) return;
+    import('./level-thumbnail.js').then(({ renderLevelThumbnail, difficultyOf }) => {
+      const fakeLevel = { obstacles: currentEditor.obstacles, gap: currentEditor.gap };
+      renderLevelThumbnail(fakeLevel, mini);
+      const metaEl = document.getElementById('ed-meta');
+      if (metaEl) metaEl.textContent = `${currentEditor.obstacles.length} pipes · ${difficultyOf(fakeLevel)}`;
+    });
+    currentEditor._miniRaf = requestAnimationFrame(renderMini);
+  };
+  if (currentEditor._miniRaf) cancelAnimationFrame(currentEditor._miniRaf);
+  currentEditor._miniRaf = requestAnimationFrame(renderMini);
 }
 
 function setTool(t) {
