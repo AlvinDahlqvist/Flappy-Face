@@ -1015,6 +1015,23 @@ function renderAviary() {
       });
     }
     grid.appendChild(card);
+
+    let tiltRaf = 0;
+    card.addEventListener('pointermove', (e) => {
+      const r = card.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width;   // 0..1
+      const y = (e.clientY - r.top) / r.height;
+      const rx = (0.5 - y) * 8;   // deg
+      const ry = (x - 0.5) * 8;
+      cancelAnimationFrame(tiltRaf);
+      tiltRaf = requestAnimationFrame(() => {
+        card.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
+      });
+    });
+    card.addEventListener('pointerleave', () => {
+      cancelAnimationFrame(tiltRaf);
+      card.style.transform = '';
+    });
   });
 
   const total = Object.keys(BIRDS).length;

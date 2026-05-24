@@ -24,6 +24,7 @@
   padding: 8px 14px env(safe-area-inset-bottom);
   overflow-y: auto;
   flex: 1;
+  perspective: 800px;
 }
 
 .bird-card {
@@ -37,7 +38,9 @@
   align-items: center;
   gap: 6px;
   cursor: pointer;
-  transition: transform 0.1s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transform-style: preserve-3d;
+  will-change: transform;
   box-shadow: 0 4px 0 rgba(29, 43, 74, 0.15);
 }
 .bird-card:not(.locked):active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(29, 43, 74, 0.15); }
