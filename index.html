@@ -110,12 +110,28 @@
   <section id="screen-play" class="screen">
     <canvas id="game-canvas"></canvas>
     <div class="hud">
-      <div class="hud-left">
-        <button class="hud-btn" id="btn-pause">II</button>
-        <button class="hud-btn" id="btn-mute">M</button>
+      <div class="hud-top">
+        <div class="hud-left">
+          <button class="hud-btn" id="btn-pause" data-glyph="pause" aria-label="Pause"></button>
+          <button class="hud-btn" id="btn-mute" data-glyph="speaker" aria-label="Mute"></button>
+        </div>
+        <button class="hud-btn" id="btn-quit" data-glyph="close" aria-label="Quit"></button>
+      </div>
+      <div class="combo-row">
+        <div class="combo-meter" id="combo-meter">
+          <div class="combo-seg" data-i="0"></div>
+          <div class="combo-seg" data-i="1"></div>
+          <div class="combo-seg" data-i="2"></div>
+          <div class="combo-seg" data-i="3"></div>
+          <div class="combo-seg" data-i="4"></div>
+          <div class="combo-x" id="combo-x" hidden>x5+</div>
+        </div>
       </div>
       <div class="score" id="score">0</div>
-      <button class="hud-btn" id="btn-quit">X</button>
+      <div class="hud-counters">
+        <div class="hud-counter" id="hud-coins"><span class="hud-counter-glyph" data-glyph="coin"></span><span class="hud-counter-num" id="hud-coins-num">0</span></div>
+        <div class="hud-counter" id="hud-near"><span class="hud-counter-glyph" data-glyph="near"></span><span class="hud-counter-num" id="hud-near-num">0</span></div>
+      </div>
     </div>
     <div class="overlay" id="overlay-gameover" hidden>
       <div class="new-best-badge" id="new-best-badge">NEW BEST!</div>
