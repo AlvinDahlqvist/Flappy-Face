@@ -94,7 +94,7 @@ export class Game {
     this.birdFragSource = buildBirdSprite(
       usePhoto ? this.assets.bird : null, this.birdMeta, BIRD_RADIUS, false,
     ).canvas;
-    this.theme = pickTheme();
+    this.theme = this.options.themeOverride || pickTheme();
     recordGameStart();
     this.resize();
     this.reset();

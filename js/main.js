@@ -484,6 +484,41 @@ async function startGame(options) {
   await currentGame.start();
 }
 
+async function openShareModal() {
+  const { buildShareCard, downloadShareCard, copyShareCard } = await import('./share-card.js');
+  const modal = document.getElementById('share-modal');
+  const preview = document.getElementById('share-preview');
+  preview.removeAttribute('src');
+
+  // Gather current run context
+  const score = Number(document.getElementById('final-score').textContent) || 0;
+  const best  = Number(document.getElementById('final-best').textContent) || 0;
+  const grade = document.getElementById('grade-stamp').textContent;
+  const selectedId = loadSelectedBird();
+  const photos = loadPhotos();
+  let bird = null, photoImg = null;
+  if (selectedId === PHOTO_BIRD_ID && photos.bird) {
+    photoImg = await loadImageFromUrl(photos.bird);
+  } else {
+    bird = getBird(selectedId);
+  }
+  const theme = currentGame?.theme || 'day';
+
+  modal.hidden = false;
+  preview.alt = 'Generating...';
+  const card = await buildShareCard({ bird, photoImg, grade, score, best, theme });
+  preview.src = card.dataUrl;
+
+  document.getElementById('share-close').onclick = () => { modal.hidden = true; };
+  document.getElementById('share-copy').onclick = async () => {
+    const ok = await copyShareCard(card);
+    document.getElementById('share-copy').textContent = ok ? 'Copied!' : 'Unavailable';
+  };
+  document.getElementById('share-download').onclick = () => {
+    downloadShareCard(card, `flappy-face-${grade}-${score}.png`);
+  };
+}
+
 function renderInlineUnlock() {
   const card = document.getElementById('unlock-inline');
   const recent = consumeRecentUnlocks();
@@ -596,6 +631,8 @@ function wirePlayHud() {
     if (!audio.muted) ensureAudio();
     refreshMuteBtn();
   });
+
+  document.getElementById('btn-share').addEventListener('click', openShareModal);
 }
 
 function exitToMenu() {

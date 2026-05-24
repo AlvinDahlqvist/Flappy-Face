@@ -106,3 +106,15 @@
   gap: 10px;
   justify-content: flex-end;
 }
+
+.share-modal-inner { max-width: min(420px, 92vw); }
+.share-preview {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 60vh;
+  object-fit: contain;
+  background: #0d1b3d;
+  border: 3px solid var(--frame-dark);
+  border-radius: 4px;
+}
