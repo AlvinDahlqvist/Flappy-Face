@@ -129,28 +129,28 @@ function rollNumber(el, target) {
 
 function animateMenuIntro() {
   const chars = document.querySelectorAll('#menu-title .ch');
-  if (anime) {
-    anime.set(chars, { translateY: -60, opacity: 0, rotate: -20 });
-    anime({
-      targets: chars,
-      translateY: 0,
-      opacity: 1,
-      rotate: 0,
-      duration: 700,
-      delay: anime.stagger(60),
-      easing: 'easeOutElastic(1, 0.6)',
-    });
-    anime({
-      targets: '#screen-menu .subtitle, #screen-menu .upload-grid, #screen-menu .menu-buttons, #screen-menu .highscore',
-      translateY: [20, 0],
-      opacity: [0, 1],
-      duration: 600,
-      delay: anime.stagger(80, { start: 400 }),
-      easing: 'easeOutQuad',
-    });
-  } else {
+  if (!anime) {
     chars.forEach(c => { c.style.opacity = '1'; });
+    return;
   }
+  anime.set(chars, { translateY: -60, opacity: 0, rotate: -20 });
+  anime({
+    targets: chars,
+    translateY: 0,
+    opacity: 1,
+    rotate: 0,
+    duration: 700,
+    delay: anime.stagger(50),
+    easing: 'easeOutElastic(1, 0.6)',
+  });
+  anime({
+    targets: '#screen-menu .subtitle, #screen-menu .cat-tile, #screen-menu .customize-drawer, #screen-menu .stats-ribbon',
+    translateY: [22, 0],
+    opacity: [0, 1],
+    duration: 600,
+    delay: anime.stagger(80, { start: 380 }),
+    easing: 'easeOutQuad',
+  });
 }
 
 function startTipRotator() {
