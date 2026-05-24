@@ -10,6 +10,9 @@ import {
 import { BIRDS, PHOTO_BIRD_ID, unlockText, getBird, drawWing } from './birds.js';
 import { onUnlock, bootstrapUnlocks, recordTitleClick, isUnlocked, getProgress } from './achievements.js';
 import { loadStats } from './storage.js';
+import { settings } from './settings.js';
+import { installUiFx } from './ui-fx.js';
+import { transition } from './transitions.js';
 
 // Lazy-loaded animation lib. Falls back to CSS-only behaviour if CDN fails.
 let anime = null;
@@ -53,9 +56,11 @@ const DEATH_MESSAGES = [
 ];
 
 function show(name) {
-  for (const [k, el] of Object.entries(screens)) {
-    el.classList.toggle('active', k === name);
-  }
+  return transition(async () => {
+    for (const [k, el] of Object.entries(screens)) {
+      el.classList.toggle('active', k === name);
+    }
+  });
 }
 
 // ---------- AUDIO HOOKS ----------
@@ -806,6 +811,7 @@ function showUnlockToast(bird) {
 
 // ---------- INIT ----------
 function init() {
+  installUiFx();
   bootstrapUnlocks();
   wireUploads();
   wireMenuNav();
