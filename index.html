@@ -134,6 +134,7 @@
       </div>
     </div>
     <div class="overlay" id="overlay-gameover" hidden>
+      <div class="grade-stamp" id="grade-stamp" data-grade="D">D</div>
       <div class="new-best-badge" id="new-best-badge">NEW BEST!</div>
       <h2 id="gameover-message">Splat.</h2>
       <div class="score-row">
@@ -141,14 +142,25 @@
         <div><span class="score-label">BEST</span><span class="score-value" id="final-best">0</span></div>
       </div>
       <div class="run-summary" id="run-summary">
-        <div class="run-stat"><span class="run-stat-icon">★</span><span class="run-stat-label">Coins</span><span class="run-stat-value" id="sum-coins">0</span></div>
-        <div class="run-stat"><span class="run-stat-icon">!</span><span class="run-stat-label">Closes</span><span class="run-stat-value" id="sum-closes">0</span></div>
-        <div class="run-stat"><span class="run-stat-icon">x</span><span class="run-stat-label">Streak</span><span class="run-stat-value" id="sum-streak">0</span></div>
-        <div class="run-stat"><span class="run-stat-icon">^</span><span class="run-stat-label">Flaps</span><span class="run-stat-value" id="sum-flaps">0</span></div>
-        <div class="run-stat"><span class="run-stat-icon">T</span><span class="run-stat-label">Time</span><span class="run-stat-value" id="sum-time">0:00</span></div>
+        <div class="run-stat"><span class="run-stat-icon" data-glyph="coin"></span><span class="run-stat-label">Coins</span><span class="run-stat-value" id="sum-coins">0</span></div>
+        <div class="run-stat"><span class="run-stat-icon" data-glyph="near"></span><span class="run-stat-label">Closes</span><span class="run-stat-value" id="sum-closes">0</span></div>
+        <div class="run-stat"><span class="run-stat-icon" data-glyph="flame"></span><span class="run-stat-label">Streak</span><span class="run-stat-value" id="sum-streak">0</span></div>
+        <div class="run-stat"><span class="run-stat-icon" data-glyph="runs"></span><span class="run-stat-label">Flaps</span><span class="run-stat-value" id="sum-flaps">0</span></div>
+        <div class="run-stat"><span class="run-stat-icon" data-glyph="sparkle"></span><span class="run-stat-label">Time</span><span class="run-stat-value" id="sum-time">0:00</span></div>
       </div>
-      <button class="btn primary" id="btn-retry">Run it back</button>
-      <button class="btn" id="btn-back-from-gameover">Back to menu</button>
+      <div class="unlock-inline" id="unlock-inline" hidden>
+        <canvas class="unlock-inline-bird" id="unlock-inline-canvas" width="64" height="64"></canvas>
+        <div class="unlock-inline-text">
+          <div class="unlock-inline-label">NEW BIRD UNLOCKED</div>
+          <div class="unlock-inline-name" id="unlock-inline-name"></div>
+        </div>
+        <button class="btn small primary" id="unlock-inline-equip">EQUIP</button>
+      </div>
+      <div class="gameover-buttons">
+        <button class="btn primary" id="btn-retry">RUN IT BACK</button>
+        <button class="btn" id="btn-share"><span class="icon" data-glyph="share"></span> SHARE</button>
+        <button class="btn ghost" id="btn-back-from-gameover">MENU</button>
+      </div>
     </div>
     <div class="overlay" id="overlay-pause" hidden>
       <h2>Paused</h2>
