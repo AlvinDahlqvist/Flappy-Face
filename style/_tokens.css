@@ -1,0 +1,53 @@
+/* style/_tokens.css — design tokens (colors, fonts, radii, shadows) */
+
+:root {
+  /* Backgrounds */
+  --bg:        #1a1a2e;
+  --bg-2:      #16213e;
+  --bg-3:      #0e1729;
+  --midnight:  #0d1b3d;
+  --frame-dark:  #1a1a2e;
+  --frame-light: #f7f7ff;
+
+  /* Sky (kept from v1) */
+  --sky-top:    #5eb3d6;
+  --sky-mid:    #8fd1e8;
+  --sky-bottom: #d2eef4;
+
+  /* Accents */
+  --accent:    #ffd166;  /* amber */
+  --accent-2:  #ef476f;  /* pink */
+  --accent-3:  #06d6a0;  /* mint */
+  --sunset:    #ff8c42;
+
+  /* Text */
+  --text:  #f7f7ff;
+  --muted: #a8a8c0;
+  --ink:   #1d2b4a;
+
+  /* Surfaces */
+  --panel:        rgba(20, 20, 40, 0.85);
+  --panel-light:  rgba(255, 255, 255, 0.55);
+
+  /* Pixel-frame shadow stack (used by buttons/frames) */
+  --pix-shadow-1: 0 4px 0 rgba(0,0,0,0.45);
+  --pix-shadow-2: 0 4px 0 rgba(0,0,0,0.45), inset 0 2px 0 rgba(255,255,255,0.15);
+  --pix-shadow-3: 0 4px 0 rgba(0,0,0,0.45), inset 0 2px 0 rgba(255,255,255,0.15), 0 0 0 4px var(--frame-dark);
+
+  /* Sizing */
+  --tap: 44px;
+
+  /* Fonts (loaded in index.html) */
+  --font-display: 'Bungee', 'Press Start 2P', 'Arial Black', system-ui, sans-serif;
+  --font-pixel:   'Press Start 2P', 'VT323', monospace;
+  --font-game:    'Jersey 25', 'Bungee', 'Trebuchet MS', system-ui, sans-serif;
+
+  /* Z-layers */
+  --z-overlay:    3;
+  --z-modal:      10;
+  --z-toast:      50;
+  --z-crt:        80;
+  --z-grain:      81;
+  --z-transition: 90;
+  --z-intro:      95;
+}
