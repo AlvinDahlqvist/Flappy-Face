@@ -1,9 +1,9 @@
 import { loadAllPhotos } from './assets.js';
 import { saveHighscore, loadHighscore, loadSelectedBird } from './storage.js';
 import { onFlap, fitCanvas } from './input.js';
-import { audio, ScreenShake, ParticleSystem, spawnConfetti, spawnFragments, springStep } from './effects.js';
+import { audio, ScreenShake, ParticleSystem, spawnConfetti, spawnFragments, springStep, spawnRingBurst } from './effects.js';
 import { BIRDS, PHOTO_BIRD_ID, getBird, drawWing } from './birds.js';
-import { recordGameStart, recordDeath, recordScore, recordCustomComplete, recordCombo } from './achievements.js';
+import { recordGameStart, recordDeath, recordScore, recordCustomComplete, recordCombo, recordCoins, recordNearMisses } from './achievements.js';
 import { pickTheme, buildScene, updateScene, drawScene, drawGround } from './scene.js';
 
 const GRAVITY = 1600;
@@ -68,6 +68,17 @@ export class Game {
     this._overlayFired = false;
     this._gameOverResult = null;
     this.onCombo = this.options.onCombo || (() => {});
+    // depth pass additions
+    this.trail = [];          // array of { x, y, rot, squashX, squashY, life }
+    this.coins = [];          // { x, y, vx, vy, collected, bob }
+    this.coinsCollected = 0;
+    this.nearMisses = 0;
+    this.lastNearMissPipeId = null;
+    // per-run summary stats
+    this.flapsThisRun = 0;
+    this.bestComboThisRun = 0;
+    this.runStartTime = 0;
+    this.runDurationMs = 0;
   }
 
   async start() {
@@ -154,6 +165,15 @@ export class Game {
     this.overlayDelay = 0;
     this._overlayFired = false;
     this._gameOverResult = null;
+    this.trail = [];
+    this.coins = [];
+    this.coinsCollected = 0;
+    this.nearMisses = 0;
+    this.lastNearMissPipeId = null;
+    this.flapsThisRun = 0;
+    this.bestComboThisRun = 0;
+    this.runStartTime = 0;
+    this.runDurationMs = 0;
     this.onCombo(0);
 
     if (this.options.mode === 'custom' && this.options.level) {
@@ -163,6 +183,14 @@ export class Game {
       this.customEnd = maxX + this.viewW;
       this.scrollX = -this.viewW;
       this.lastSpawnX = 0;
+      // Drop coins between custom pipes
+      const sorted = [...this.customPipes].sort((a, b) => a.x - b.x);
+      for (let i = 0; i < sorted.length - 1; i++) {
+        if (Math.random() < 0.45) {
+          const midX = (sorted[i].x + sorted[i + 1].x) / 2;
+          this.spawnCoin(midX, this.viewH * (0.30 + Math.random() * 0.40));
+        }
+      }
     } else {
       this.scrollX = 0;
       const spawnEvery = (SPAWN_INTERVAL / 1000) * SCROLL_SPEED;
@@ -184,6 +212,7 @@ export class Game {
     this.bird.squashXV = 0;
     this.bird.squashYV = 0;
     this.bird.wingFlap = 1;
+    this.flapsThisRun += 1;
     audio.play('flap');
   }
 
@@ -231,6 +260,7 @@ export class Game {
       if (this.countdown <= 0) {
         this.state = 'playing';
         this.goFlash = 0.5;
+        this.runStartTime = performance.now();
         audio.play('go');
       }
       this.bird.y = this.viewH * 0.5 + Math.sin(performance.now() / 250) * 12;
@@ -263,6 +293,11 @@ export class Game {
             score: this.score,
             best: this._gameOverResult.best,
             isNew: this._gameOverResult.isNew,
+            coins: this.coinsCollected,
+            nearMisses: this.nearMisses,
+            bestCombo: this.bestComboThisRun,
+            flaps: this.flapsThisRun,
+            durationMs: this.runDurationMs,
           });
         }
       }
@@ -278,13 +313,27 @@ export class Game {
     this.scrollX += SCROLL_SPEED * dt;
     this.bgOffset = (this.bgOffset + SCROLL_SPEED * 0.3 * dt) % this.viewW;
 
+    // Trail — capture a snapshot every frame, age them out
+    this.trail.unshift({
+      x: this.bird.x, y: this.bird.y,
+      rot: this.bird.rot,
+      squashX: this.bird.squashX, squashY: this.bird.squashY,
+      life: 0.32,
+    });
+    const maxTrail = 4 + Math.min(8, Math.floor(this.combo / 2));
+    if (this.trail.length > maxTrail) this.trail.length = maxTrail;
+    for (const t of this.trail) t.life -= dt;
+    this.trail = this.trail.filter(t => t.life > 0);
+
     this.spawnPipes();
+    this.updateCoins(dt);
 
     for (const p of this.pipes) {
       if (!p.scored && p.x + PIPE_WIDTH < this.scrollX + this.bird.x) {
         p.scored = true;
         this.score += 1;
         this.combo += 1;
+        if (this.combo > this.bestComboThisRun) this.bestComboThisRun = this.combo;
         this.comboPulse = 1;
         this.onCombo(this.combo);
         audio.play('score');
@@ -339,9 +388,106 @@ export class Game {
     }
     this.pipes = this.pipes.filter(p => p.x - this.scrollX + PIPE_WIDTH > -50);
 
+    this.detectNearMiss();
+
     if (this.checkCollision()) {
       this.die();
     }
+  }
+
+  // Fire once per pipe when bird passes within NEAR_MISS px of either gap edge.
+  detectNearMiss() {
+    const NEAR_MISS = 14;
+    for (const p of this.pipes) {
+      const px = p.x - this.scrollX;
+      // Bird is currently between the pipe's left and right edges?
+      if (this.bird.x < px - 2) continue;
+      if (this.bird.x > px + PIPE_WIDTH + 2) continue;
+      if (p.id === this.lastNearMissPipeId || p.nearMissed) continue;
+      const distTop = Math.abs((this.bird.y - BIRD_RADIUS) - (p.gapY - p.gap / 2));
+      const distBot = Math.abs((this.bird.y + BIRD_RADIUS) - (p.gapY + p.gap / 2));
+      const d = Math.min(distTop, distBot);
+      if (d < NEAR_MISS) {
+        p.nearMissed = true;
+        this.lastNearMissPipeId = p.id;
+        this.nearMisses += 1;
+        this.score += 2;            // bonus for risk
+        audio.play('hover');        // quick whoosh
+        this.shake.kick(3);
+        this.popups.push({
+          text: 'CLOSE!',
+          x: this.bird.x,
+          y: this.bird.y - 40,
+          vy: -100,
+          life: 0.9, maxLife: 0.9,
+          font: '24px "Bungee", "Press Start 2P", system-ui, sans-serif',
+          color: '#06d6a0',
+        });
+        this.onScore(this.score);
+      }
+    }
+  }
+
+  // ============ COINS ============
+
+  spawnCoin(worldX, worldY) {
+    this.coins.push({
+      x: worldX, y: worldY,
+      vx: 0, vy: 0,
+      collected: false,
+      bob: Math.random() * Math.PI * 2,
+      spawnY: worldY,
+    });
+  }
+
+  updateCoins(dt) {
+    const MAGNET_R = 90;
+    const PICKUP_R = BIRD_RADIUS + 12;
+    for (const c of this.coins) {
+      if (c.collected) continue;
+      const sx = c.x - this.scrollX;
+      const dx = this.bird.x - sx;
+      const dy = this.bird.y - c.y;
+      const dist = Math.hypot(dx, dy);
+      // Magnet attraction (smooth)
+      if (dist < MAGNET_R) {
+        const force = (1 - dist / MAGNET_R) * 1200;
+        c.vx += (dx / dist) * force * dt;
+        c.vy += (dy / dist) * force * dt;
+      } else {
+        c.vx *= 0.95;
+        c.vy *= 0.95;
+        // Idle bob
+        c.y = c.spawnY + Math.sin(this.timeElapsed * 3 + c.bob) * 4;
+        continue;
+      }
+      c.x += c.vx * dt;
+      c.y += c.vy * dt;
+      // Pickup
+      if (dist < PICKUP_R) {
+        c.collected = true;
+        this.coinsCollected += 1;
+        this.score += 5;
+        this.shake.kick(3);
+        audio.play('score');
+        spawnConfetti(this.particles, sx, c.y, 12);
+        spawnRingBurst(this.particles, sx, c.y, '#ffd166', 18);
+        this.popups.push({
+          text: '+5',
+          x: this.bird.x + 12,
+          y: this.bird.y - 30,
+          vy: -100,
+          life: 0.8, maxLife: 0.8,
+          font: '26px "Bungee", "Press Start 2P", system-ui, sans-serif',
+          color: '#ffd166',
+        });
+        this.onScore(this.score);
+      }
+    }
+    // Cull collected + off-screen
+    this.coins = this.coins.filter(c =>
+      !c.collected && (c.x - this.scrollX + 20 > -50)
+    );
   }
 
   spawnPipes() {
@@ -357,14 +503,31 @@ export class Game {
       if (this.scrollX > this.customEnd) {
         const result = saveHighscore(this.score);
         this.state = 'over';
+        if (this.runStartTime) this.runDurationMs = performance.now() - this.runStartTime;
         recordCustomComplete();
         recordScore(this.score);
-        this.onGameOver({ score: this.score, best: result.best, isNew: result.isNew, completed: true });
+        recordCoins(this.coinsCollected);
+        recordNearMisses(this.nearMisses);
+        this.onGameOver({
+          score: this.score,
+          best: result.best,
+          isNew: result.isNew,
+          coins: this.coinsCollected,
+          nearMisses: this.nearMisses,
+          bestCombo: this.bestComboThisRun,
+          flaps: this.flapsThisRun,
+          durationMs: this.runDurationMs,
+          completed: true,
+        });
       }
     } else {
       const spawnEvery = (SPAWN_INTERVAL / 1000) * SCROLL_SPEED;
       while (this.lastSpawnX < this.scrollX + this.viewW + 200) {
         this.lastSpawnX += spawnEvery;
+        // ~35% chance to drop a coin between this pipe and the next, in the gap area
+        if (Math.random() < 0.35) {
+          this.spawnCoin(this.lastSpawnX - spawnEvery / 2, this.viewH * (0.30 + Math.random() * 0.40));
+        }
         const baseGap = 170;
         const shrink = Math.max(0.6, 1 - this.score * 0.015);
         const gap = baseGap * shrink;
@@ -407,10 +570,13 @@ export class Game {
     this.shake.kick(18);
     this.deathFlash = 1;
     this.bird.vy = Math.max(this.bird.vy, -80);
+    if (this.runStartTime) this.runDurationMs = performance.now() - this.runStartTime;
     // Persist score / new-best NOW so the overlay later has the right values.
     this._gameOverResult = saveHighscore(this.score);
     if (this._gameOverResult.isNew) audio.play('cheer');
     recordCombo(this.combo);
+    recordCoins(this.coinsCollected);
+    recordNearMisses(this.nearMisses);
     recordDeath();
     recordScore(this.score);
   }
@@ -454,6 +620,14 @@ export class Game {
       this.drawPipe(px, p.gapY + p.gap / 2, PIPE_WIDTH, this.groundY - (p.gapY + p.gap / 2), false, p.color);
     }
 
+    // ===== coins (between pipes, before ground) =====
+    for (const c of this.coins) {
+      if (c.collected) continue;
+      const sx = c.x - this.scrollX;
+      if (sx < -30 || sx > viewW + 30) continue;
+      drawCoin(ctx, sx, c.y, this.timeElapsed + c.bob);
+    }
+
     // ===== ground + grass =====
     if (this.scene) {
       drawGround(ctx, this.scene, this.scrollX, this.timeElapsed, viewW, viewH, this.groundY);
@@ -464,9 +638,30 @@ export class Game {
       ctx.fillRect(0, this.groundY, viewW, 6);
     }
 
+    // ===== bird shadow (after ground, before speed lines/bird) =====
+    if (this.state !== 'over') {
+      this.drawBirdShadow();
+    }
+
     // ===== speed lines (behind bird) =====
     if (this.state === 'playing' && this.bird.vy > SPEED_LINE_THRESHOLD) {
       drawSpeedLines(ctx, this.bird, this.timeElapsed);
+    }
+
+    // ===== bird trail (ghost copies, fading) =====
+    if (this.state === 'playing' && this.trail.length) {
+      for (const t of this.trail) {
+        const alpha = (t.life / 0.32) * 0.35;
+        if (alpha <= 0.02) continue;
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.translate(t.x, t.y);
+        ctx.rotate(t.rot);
+        ctx.scale(t.squashX, t.squashY);
+        const s = this.birdSprite.totalSize || BIRD_RADIUS * 2;
+        ctx.drawImage(this.birdSprite.canvas, -s / 2, -s / 2, s, s);
+        ctx.restore();
+      }
     }
 
     // ===== bird (skip when exploded) =====
@@ -621,6 +816,24 @@ export class Game {
     }
   }
 
+  // Soft elliptical shadow on the ground under the bird. Shrinks + fades as
+  // the bird climbs higher, grounds it in the world.
+  drawBirdShadow() {
+    const { ctx, bird } = this;
+    const heightAboveGround = this.groundY - bird.y;
+    if (heightAboveGround < 0) return;
+    const t = Math.min(1, heightAboveGround / (this.viewH * 0.6));
+    const widthScale = 1 - t * 0.55;
+    const alpha = 0.32 * (1 - t * 0.6);
+    if (alpha <= 0.02) return;
+    ctx.save();
+    ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
+    ctx.beginPath();
+    ctx.ellipse(bird.x, this.groundY - 3, BIRD_RADIUS * 0.95 * widthScale, BIRD_RADIUS * 0.30 * widthScale, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
   drawBird(dying) {
     if (!this.birdSprite) return;
     const { ctx, bird } = this;
@@ -684,8 +897,6 @@ function buildBirdSprite(img, birdMeta, radius, padded = true) {
   const size = radius * 2;
   const dpr = window.devicePixelRatio || 1;
   const c = document.createElement('canvas');
-  // Padding for things that extend past the circle (crown, halo, etc.)
-  // For fragments we use no padding so each shard is just body, not accessories.
   const pad = padded ? Math.ceil(radius * 0.6) : 0;
   const totalSize = size + pad * 2;
   c.width = Math.ceil(totalSize * dpr);
@@ -718,6 +929,65 @@ function buildBirdSprite(img, birdMeta, radius, padded = true) {
     ctx.fill();
   }
   return { canvas: c, radius, pad, totalSize };
+}
+
+// Spinning gold coin — flips horizontally for 3D, pulsing halo behind.
+function drawCoin(ctx, x, y, t) {
+  const spin = Math.cos(t * 4.5);
+  const absSpin = Math.abs(spin);
+  const h = 16;
+  // Width oscillates 0 → 14 with spin. Clamp to a small minimum so the
+  // inner-ring inset never goes negative (ctx.ellipse throws on neg radius).
+  const w = Math.max(0, 14 * absSpin);
+
+  ctx.save();
+  ctx.translate(x, y);
+
+  // pulsing halo behind
+  const haloAlpha = 0.20 + 0.18 * Math.sin(t * 5);
+  ctx.fillStyle = `rgba(255, 220, 80, ${haloAlpha})`;
+  ctx.beginPath();
+  ctx.arc(0, 0, 22, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Edge state — when the coin is mostly on its edge, render a thin vertical
+  // bar. Threshold matched so the ellipse branch never has w < 3.
+  if (absSpin < 0.22) {
+    ctx.fillStyle = '#a8782e';
+    ctx.fillRect(-2, -h, 4, h * 2);
+    ctx.fillStyle = '#7a4f00';
+    ctx.fillRect(-2, -h, 1, h * 2);
+    ctx.restore();
+    return;
+  }
+
+  // outer rim
+  ctx.fillStyle = '#7a4f00';
+  ctx.beginPath();
+  ctx.ellipse(0, 0, w + 2, h + 2, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // face
+  ctx.fillStyle = spin >= 0 ? '#ffd166' : '#e3b350';
+  ctx.beginPath();
+  ctx.ellipse(0, 0, w, h, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // inner ring — defensively clamped
+  const innerW = Math.max(0.1, w - 2);
+  const innerH = Math.max(0.1, h - 2);
+  ctx.strokeStyle = '#fff5b8';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, innerW, innerH, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  // star mark (only when mostly face-on)
+  if (spin > 0.4) {
+    ctx.fillStyle = '#7a4f00';
+    ctx.font = `${Math.round(h * 1.05)}px "Bungee", "Press Start 2P", system-ui`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('★', 0, 1);
+  }
+  ctx.restore();
 }
 
 function drawSpeedLines(ctx, bird, t) {

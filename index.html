@@ -86,8 +86,17 @@
     <div class="overlay" id="overlay-gameover" hidden>
       <div class="new-best-badge" id="new-best-badge">NEW BEST!</div>
       <h2 id="gameover-message">Splat.</h2>
-      <p>Score: <span id="final-score">0</span></p>
-      <p>Best: <span id="final-best">0</span></p>
+      <div class="score-row">
+        <div><span class="score-label">SCORE</span><span class="score-value" id="final-score">0</span></div>
+        <div><span class="score-label">BEST</span><span class="score-value" id="final-best">0</span></div>
+      </div>
+      <div class="run-summary" id="run-summary">
+        <div class="run-stat"><span class="run-stat-icon">★</span><span class="run-stat-label">Coins</span><span class="run-stat-value" id="sum-coins">0</span></div>
+        <div class="run-stat"><span class="run-stat-icon">!</span><span class="run-stat-label">Closes</span><span class="run-stat-value" id="sum-closes">0</span></div>
+        <div class="run-stat"><span class="run-stat-icon">x</span><span class="run-stat-label">Streak</span><span class="run-stat-value" id="sum-streak">0</span></div>
+        <div class="run-stat"><span class="run-stat-icon">^</span><span class="run-stat-label">Flaps</span><span class="run-stat-value" id="sum-flaps">0</span></div>
+        <div class="run-stat"><span class="run-stat-icon">T</span><span class="run-stat-label">Time</span><span class="run-stat-value" id="sum-time">0:00</span></div>
+      </div>
       <button class="btn primary" id="btn-retry">Run it back</button>
       <button class="btn" id="btn-back-from-gameover">Back to menu</button>
     </div>

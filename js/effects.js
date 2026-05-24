@@ -258,6 +258,24 @@ export class ParticleSystem {
 
 const CONFETTI_COLORS = ['#ffd166', '#ef476f', '#06d6a0', '#118ab2', '#fff', '#ffafcc'];
 
+// Radial burst of particles flying outward from a point — looks like an
+// expanding ring. Cheap juice for coin pickups, near-misses, etc.
+export function spawnRingBurst(ps, x, y, color = '#ffd166', count = 16) {
+  for (let i = 0; i < count; i++) {
+    const a = (i / count) * Math.PI * 2;
+    const speed = 130 + Math.random() * 90;
+    ps.add({
+      x, y,
+      vx: Math.cos(a) * speed,
+      vy: Math.sin(a) * speed,
+      size: 4 + Math.random() * 2,
+      color,
+      maxLife: 0.55,
+      gravity: 0,
+    });
+  }
+}
+
 export function spawnConfetti(ps, x, y, amount = 12) {
   for (let i = 0; i < amount; i++) {
     const angle = -Math.PI / 2 + (Math.random() - 0.5) * 1.2;

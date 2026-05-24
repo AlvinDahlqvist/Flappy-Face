@@ -231,6 +231,7 @@ function stopHeroBird() {
 
 async function startHeroBird() {
   stopHeroBird();
+  stopAviaryAnimations();
   const canvas = document.getElementById('hero-bird');
   if (!canvas) return;
   const dpr = window.devicePixelRatio || 1;
@@ -324,6 +325,7 @@ async function startGame(options) {
   ensureAudio();
   stopTipRotator();
   stopHeroBird();
+  stopAviaryAnimations();
 
   show('play');
   const canvas = document.getElementById('game-canvas');
@@ -337,7 +339,8 @@ async function startGame(options) {
   currentGame = new Game(canvas, {
     ...options,
     onScore: (s) => { document.getElementById('score').textContent = s; },
-    onGameOver: ({ score, best, isNew }) => {
+    onGameOver: (info) => {
+      const { score, best, isNew, coins = 0, nearMisses = 0, bestCombo = 0, flaps = 0, durationMs = 0 } = info;
       document.getElementById('final-score').textContent = score;
       document.getElementById('final-best').textContent = best ?? loadHighscore();
       const msg = isNew
@@ -346,9 +349,58 @@ async function startGame(options) {
       document.getElementById('gameover-message').textContent = msg;
       overlayGameOver.classList.toggle('new-best', !!isNew);
       overlayGameOver.hidden = false;
+      animateRunSummary({ coins, nearMisses, bestCombo, flaps, durationMs });
     },
   });
   await currentGame.start();
+}
+
+function animateRunSummary({ coins, nearMisses, bestCombo, flaps, durationMs }) {
+  const targets = [
+    { id: 'sum-coins',  v: coins },
+    { id: 'sum-closes', v: nearMisses },
+    { id: 'sum-streak', v: bestCombo },
+    { id: 'sum-flaps',  v: flaps },
+    { id: 'sum-time',   v: durationMs, isTime: true },
+  ];
+  // Reset to zero so the cascade reads fresh on each game over.
+  for (const t of targets) {
+    document.getElementById(t.id).textContent = t.isTime ? '0:00' : '0';
+  }
+  if (!anime) {
+    for (const t of targets) {
+      document.getElementById(t.id).textContent = formatStat(t);
+    }
+    return;
+  }
+  // Stagger each row's value from 0 → target.
+  targets.forEach((t, i) => {
+    const el = document.getElementById(t.id);
+    const obj = { v: 0 };
+    anime({
+      targets: obj,
+      v: t.v,
+      duration: 700,
+      delay: 200 + i * 90,
+      easing: 'easeOutQuad',
+      update: () => {
+        if (t.isTime) el.textContent = formatTime(obj.v);
+        else el.textContent = Math.round(obj.v);
+      },
+    });
+  });
+}
+
+function formatStat(t) {
+  if (t.isTime) return formatTime(t.v);
+  return String(t.v);
+}
+
+function formatTime(ms) {
+  const total = Math.max(0, Math.round(ms / 1000));
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
 function wirePlayHud() {
@@ -400,6 +452,7 @@ function exitToMenu() {
 async function openEditor(initial) {
   stopTipRotator();
   stopHeroBird();
+  stopAviaryAnimations();
   show('editor');
   const canvas = document.getElementById('editor-canvas');
   if (currentEditor) currentEditor.stop();
@@ -486,6 +539,7 @@ function wireEditor() {
 function openLevels() {
   stopTipRotator();
   stopHeroBird();
+  stopAviaryAnimations();
   refreshLevelsList();
   show('levels');
 }
@@ -537,9 +591,14 @@ function wireLevels() {
 }
 
 // ---------- AVIARY ----------
+let aviaryRafId = null;
+let aviaryStartTime = 0;
+let aviaryTiles = []; // [{ ctx, entry, phase, photoImg }]
+
 function openAviary() {
   stopTipRotator();
   stopHeroBird();
+  stopAviaryAnimations();
   renderAviary();
   show('aviary');
 }
@@ -548,7 +607,62 @@ function wireAviary() {
   document.getElementById('av-back').addEventListener('click', exitToMenu);
 }
 
+function stopAviaryAnimations() {
+  if (aviaryRafId) cancelAnimationFrame(aviaryRafId);
+  aviaryRafId = null;
+  aviaryTiles = [];
+}
+
+function startAviaryAnimations() {
+  if (aviaryRafId) cancelAnimationFrame(aviaryRafId);
+  aviaryStartTime = performance.now();
+  const tick = (now) => {
+    aviaryRafId = requestAnimationFrame(tick);
+    const t = (now - aviaryStartTime) / 1000;
+    for (const tile of aviaryTiles) {
+      paintAnimatedTile(tile, t);
+    }
+  };
+  aviaryRafId = requestAnimationFrame(tick);
+}
+
+function paintAnimatedTile(tile, t) {
+  const { ctx, entry, phase } = tile;
+  const size = 80;
+  const r = 26;
+  // Clear in identity transform so we don't accumulate the per-frame transforms.
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  const dpr = window.devicePixelRatio || 1;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const bob = Math.sin(t * 2.2 + phase) * 3;
+  ctx.translate(size / 2, size / 2 + 4 + bob);
+  if (entry.isPhoto) {
+    if (tile.photoImg) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(0, 0, r, 0, Math.PI * 2);
+      ctx.clip();
+      const img = tile.photoImg;
+      const scale = Math.max((r * 2) / img.width, (r * 2) / img.height);
+      const w = img.width * scale, h = img.height * scale;
+      ctx.drawImage(img, -w / 2, -h / 2, w, h);
+      ctx.restore();
+      ctx.strokeStyle = '#ffd166';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(0, 0, r, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  } else if (entry.bird) {
+    const flap = 0.5 + 0.5 * Math.sin(t * 5.5 + phase);
+    drawWing(ctx, r, flap, entry.bird.wingFill, entry.bird.wingStroke);
+    entry.bird.draw(ctx, r);
+  }
+}
+
 function renderAviary() {
+  stopAviaryAnimations();
   const grid = document.getElementById('aviary-grid');
   const progressEl = document.getElementById('aviary-progress');
   grid.innerHTML = '';
@@ -557,7 +671,6 @@ function renderAviary() {
   const photoUrl = loadPhotos().bird;
 
   const allEntries = [];
-  // "Your Photo" only appears if photo uploaded
   if (photoUrl) {
     allEntries.push({
       id: PHOTO_BIRD_ID, name: 'YOUR FACE', desc: 'Your uploaded photo',
@@ -571,17 +684,29 @@ function renderAviary() {
     });
   }
 
-  for (const entry of allEntries) {
+  allEntries.forEach((entry, index) => {
     const card = document.createElement('div');
     card.className = 'bird-card';
     if (!entry.unlocked) card.classList.add('locked');
     if (entry.id === selectedId) card.classList.add('selected');
 
     const tileCanvas = document.createElement('canvas');
-    tileCanvas.width = 80 * (window.devicePixelRatio || 1);
-    tileCanvas.height = 80 * (window.devicePixelRatio || 1);
-    paintBirdTile(tileCanvas, entry);
+    const dpr = window.devicePixelRatio || 1;
+    tileCanvas.width = 80 * dpr;
+    tileCanvas.height = 80 * dpr;
     card.appendChild(tileCanvas);
+
+    // Register tile for continuous animation
+    const tile = {
+      ctx: tileCanvas.getContext('2d'),
+      entry,
+      phase: index * 0.43,
+      photoImg: null,
+    };
+    if (entry.isPhoto) {
+      loadImageFromUrl(entry.photoUrl).then(img => { tile.photoImg = img; });
+    }
+    aviaryTiles.push(tile);
 
     const name = document.createElement('div');
     name.className = 'bird-name';
@@ -635,7 +760,7 @@ function renderAviary() {
       });
     }
     grid.appendChild(card);
-  }
+  });
 
   const total = Object.keys(BIRDS).length;
   const unlockedCount = Object.values(BIRDS).filter(b => unlockedIds.has(b.id)).length;
@@ -654,39 +779,8 @@ function renderAviary() {
   } else {
     fills.forEach(el => { el.style.width = (Number(el.dataset.ratio) * 100) + '%'; });
   }
-}
 
-// Paint an 80x80 preview of a bird into a canvas with DPR scaling.
-function paintBirdTile(canvas, entry) {
-  const ctx = canvas.getContext('2d');
-  const dpr = window.devicePixelRatio || 1;
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  const size = 80;
-  ctx.clearRect(0, 0, size, size);
-  ctx.translate(size / 2, size / 2 + 4);
-  const r = 26;
-  if (entry.isPhoto) {
-    // load and draw circular photo
-    const img = new Image();
-    img.onload = () => {
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(0, 0, r, 0, Math.PI * 2);
-      ctx.clip();
-      const scale = Math.max((r * 2) / img.width, (r * 2) / img.height);
-      const w = img.width * scale, h = img.height * scale;
-      ctx.drawImage(img, -w / 2, -h / 2, w, h);
-      ctx.restore();
-      ctx.strokeStyle = '#ffd166';
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.arc(0, 0, r, 0, Math.PI * 2);
-      ctx.stroke();
-    };
-    img.src = entry.photoUrl;
-  } else if (entry.bird) {
-    entry.bird.draw(ctx, r);
-  }
+  startAviaryAnimations();
 }
 
 // ---------- UNLOCK TOAST ----------

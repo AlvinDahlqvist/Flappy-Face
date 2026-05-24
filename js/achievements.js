@@ -22,6 +22,8 @@ function meetsCondition(unlock, stats) {
     case 'deaths': return (stats.deaths || 0) >= unlock.value;
     case 'maps': return (stats.customCompletes || 0) >= unlock.value;
     case 'easter': return (stats[unlock.statKey] || 0) >= unlock.value;
+    case 'coins': return (stats.totalCoins || 0) >= unlock.value;
+    case 'nearMisses': return (stats.maxNearMissesInRun || 0) >= unlock.value;
     default: return false;
   }
 }
@@ -87,6 +89,20 @@ export function recordCombo(combo) {
   return checkUnlocks(s);
 }
 
+export function recordCoins(collectedThisRun) {
+  const s = loadStats();
+  s.totalCoins = (s.totalCoins || 0) + collectedThisRun;
+  saveStats(s);
+  return checkUnlocks(s);
+}
+
+export function recordNearMisses(nearMissesThisRun) {
+  const s = loadStats();
+  s.maxNearMissesInRun = Math.max(s.maxNearMissesInRun || 0, nearMissesThisRun);
+  saveStats(s);
+  return checkUnlocks(s);
+}
+
 export function isUnlocked(birdId) {
   return loadUnlocked().includes(birdId);
 }
@@ -106,6 +122,10 @@ export function getProgress(unlock, stats = loadStats()) {
       current = stats.customCompletes || 0; target = unlock.value; break;
     case 'easter':
       current = stats[unlock.statKey] || 0; target = unlock.value; break;
+    case 'coins':
+      current = stats.totalCoins || 0; target = unlock.value; break;
+    case 'nearMisses':
+      current = stats.maxNearMissesInRun || 0; target = unlock.value; break;
     default:
       return null;
   }

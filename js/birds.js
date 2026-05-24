@@ -68,6 +68,24 @@ export const BIRDS = {
     wingStroke: '#b87333',
     draw: drawPizza,
   },
+  daredevil: {
+    id: 'daredevil',
+    name: 'DAREDEVIL',
+    desc: 'Lives for the scrape.',
+    unlock: { type: 'nearMisses', value: 10 },
+    wingFill: '#ffb8a8',
+    wingStroke: '#a83020',
+    draw: drawDaredevil,
+  },
+  collector: {
+    id: 'collector',
+    name: 'COLLECTOR',
+    desc: 'Gotta catch em.',
+    unlock: { type: 'coins', value: 100 },
+    wingFill: '#d4f0c0',
+    wingStroke: '#4a7028',
+    draw: drawCollector,
+  },
   legend: {
     id: 'legend',
     name: 'LEGEND',
@@ -115,6 +133,8 @@ export function unlockText(unlock) {
     case 'score': return `Score ${unlock.value} in a run`;
     case 'deaths': return `Crash ${unlock.value} times`;
     case 'maps': return `Beat ${unlock.value} custom maps`;
+    case 'coins': return `Collect ${unlock.value} coins`;
+    case 'nearMisses': return `${unlock.value} near-misses in a run`;
     case 'easter': return unlock.hint || 'Secret';
     default: return '???';
   }
@@ -441,6 +461,73 @@ function drawPizza(ctx, r) {
   ctx.beginPath();
   ctx.arc(r * 0.34, -r * 0.52, r * 0.08, 0, Math.PI * 2);
   ctx.fill();
+}
+
+function drawDaredevil(ctx, r) {
+  shadedBody(ctx, r, '#ff8a7e', '#e63b3b', '#8e1e1e');
+  cheek(ctx, r, 'rgba(255, 100, 100, 0.55)');
+  // wide nervous eye
+  ctx.fillStyle = '#fff';
+  ctx.strokeStyle = '#1a1a2e';
+  ctx.lineWidth = Math.max(1.5, r * 0.06);
+  ctx.beginPath();
+  ctx.arc(r * 0.28, -r * 0.18, r * 0.32, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  // pupil shifted right (looking ahead)
+  ctx.fillStyle = '#1a1a2e';
+  ctx.beginPath();
+  ctx.arc(r * 0.42, -r * 0.15, r * 0.14, 0, Math.PI * 2);
+  ctx.fill();
+  // angry V eyebrow
+  ctx.strokeStyle = '#1a1a2e';
+  ctx.lineWidth = Math.max(2.5, r * 0.09);
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(-r * 0.05, -r * 0.55);
+  ctx.lineTo(r * 0.30, -r * 0.42);
+  ctx.lineTo(r * 0.60, -r * 0.55);
+  ctx.stroke();
+  // sweat drop
+  ctx.fillStyle = '#7fc8e0';
+  ctx.strokeStyle = '#2d6e90';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(-r * 0.55, -r * 0.25);
+  ctx.quadraticCurveTo(-r * 0.65, -r * 0.10, -r * 0.55, r * 0.05);
+  ctx.quadraticCurveTo(-r * 0.45, -r * 0.10, -r * 0.55, -r * 0.25);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  beak(ctx, r, '#ffd166', '#a8782e');
+}
+
+function drawCollector(ctx, r) {
+  shadedBody(ctx, r, '#cef0a8', '#79c244', '#3d6e20');
+  cheek(ctx, r, 'rgba(120, 200, 80, 0.55)');
+  standardEye(ctx, r);
+  beak(ctx, r, '#ffd166', '#a8782e');
+  // little gold coin patches on body
+  const coins = [
+    { x: -r * 0.40, y:  r * 0.15, rr: r * 0.13 },
+    { x: -r * 0.10, y:  r * 0.45, rr: r * 0.11 },
+    { x:  r * 0.45, y:  r * 0.35, rr: r * 0.14 },
+  ];
+  for (const c of coins) {
+    ctx.fillStyle = '#ffd166';
+    ctx.strokeStyle = '#7a4f00';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(c.x, c.y, c.rr, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    // tiny star on each
+    ctx.fillStyle = '#7a4f00';
+    ctx.font = `${c.rr * 1.8}px "Bungee", system-ui`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('★', c.x, c.y + 1);
+  }
 }
 
 function drawLegend(ctx, r) {
