@@ -1,1 +1,82 @@
-/* style/_settings.css — populated in Phase 4 */
+/* style/_settings.css */
+
+#screen-settings {
+  background: linear-gradient(180deg, var(--sky-top), var(--sky-bottom));
+  color: var(--ink);
+  padding-top: env(safe-area-inset-top);
+  overflow-y: auto;
+}
+
+.settings-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 14px env(safe-area-inset-bottom);
+  overflow-y: auto;
+  flex: 1;
+}
+
+.settings-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+}
+.settings-group h3 {
+  margin: 0 0 4px;
+  font-family: var(--font-pixel);
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: var(--ink);
+  border-bottom: 2px solid rgba(29,43,74,0.2);
+  padding-bottom: 6px;
+}
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: var(--tap);
+  font-family: var(--font-pixel);
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+
+.pix-toggle {
+  width: 56px;
+  height: 28px;
+  border: 3px solid var(--frame-dark);
+  border-radius: 4px;
+  background: var(--bg-2);
+  position: relative;
+  cursor: pointer;
+}
+.pix-toggle::after {
+  content: '';
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 18px; height: 18px;
+  background: var(--text);
+  transition: left 0.12s ease;
+}
+.pix-toggle[aria-pressed="true"] {
+  background: var(--accent);
+}
+.pix-toggle[aria-pressed="true"]::after { left: 30px; background: var(--ink); }
+
+.pix-select {
+  padding: 4px 8px;
+  border: 3px solid var(--frame-dark);
+  border-radius: 4px;
+  background: var(--bg-2);
+  color: var(--text);
+  font-family: var(--font-pixel);
+  font-size: 11px;
+}
+
+input[type="range"]#set-volume {
+  flex: 1;
+  max-width: 60%;
+}
+
+.settings-danger { border-color: var(--accent-2); }
