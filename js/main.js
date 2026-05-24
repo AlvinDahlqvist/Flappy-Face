@@ -914,6 +914,25 @@ function paintAnimatedTile(tile, t) {
     drawWing(ctx, r, flap, entry.bird.wingFill, entry.bird.wingStroke);
     entry.bird.draw(ctx, r);
   }
+  if (tile.selected) {
+    // 4 sparkles orbiting
+    const sparkles = 4;
+    for (let i = 0; i < sparkles; i++) {
+      const a = t * 1.2 + i * (Math.PI * 2 / sparkles);
+      const orbit = r + 10 + Math.sin(t * 2 + i) * 3;
+      const sx = Math.cos(a) * orbit;
+      const sy = Math.sin(a) * orbit;
+      ctx.save();
+      ctx.translate(sx, sy);
+      ctx.fillStyle = '#ffd166';
+      ctx.beginPath();
+      // 4-point diamond sparkle
+      ctx.moveTo(0, -4); ctx.lineTo(2, 0); ctx.lineTo(0, 4); ctx.lineTo(-2, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+  }
 }
 
 function renderAviary() {
@@ -957,6 +976,7 @@ function renderAviary() {
       entry,
       phase: index * 0.43,
       photoImg: null,
+      selected: entry.id === selectedId,
     };
     if (entry.isPhoto) {
       loadImageFromUrl(entry.photoUrl).then(img => { tile.photoImg = img; });
