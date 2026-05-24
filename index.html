@@ -22,6 +22,8 @@
       <div class="ambient-cloud c6"></div>
     </div>
 
+    <button class="menu-corner-btn" id="btn-settings" aria-label="Settings"></button>
+
     <div class="menu-inner">
       <div class="hero-bird-wrap">
         <canvas id="hero-bird" width="220" height="220"></canvas>
@@ -33,39 +35,71 @@
         <span class="title-break"></span>
         <span class="ch accent">F</span><span class="ch accent">A</span><span class="ch accent">C</span><span class="ch accent">E</span>
       </h1>
-      <p class="subtitle">Upload your face. Flap through chaos.</p>
+      <p class="subtitle">TAP · FLAP · DIE</p>
 
-      <div class="upload-grid">
-        <label class="upload-slot" for="upload-bird">
-          <div class="thumb" id="thumb-bird"><span class="thumb-plus">+</span></div>
-          <span>Your Face</span>
-          <input type="file" id="upload-bird" accept="image/*" capture="environment" hidden />
-        </label>
-        <label class="upload-slot" for="upload-pipe">
-          <div class="thumb" id="thumb-pipe"><span class="thumb-plus">+</span></div>
-          <span>Obstacles</span>
-          <input type="file" id="upload-pipe" accept="image/*" capture="environment" hidden />
-        </label>
-        <label class="upload-slot" for="upload-bg">
-          <div class="thumb" id="thumb-bg"><span class="thumb-plus">+</span></div>
-          <span>Scenery</span>
-          <input type="file" id="upload-bg" accept="image/*" capture="environment" hidden />
-        </label>
+      <!-- Category tiles -->
+      <div class="cat-tiles" id="cat-tiles">
+        <button class="cat-tile" data-cat="play" id="cat-play">
+          <div class="cat-tile-glyph" data-glyph="runs"></div>
+          <div class="cat-tile-label">PLAY</div>
+        </button>
+        <button class="cat-tile" data-cat="make" id="cat-make">
+          <div class="cat-tile-glyph" data-glyph="grid"></div>
+          <div class="cat-tile-label">MAKE</div>
+        </button>
+        <button class="cat-tile" data-cat="birds" id="cat-birds">
+          <div class="cat-tile-glyph" data-glyph="sparkle"></div>
+          <div class="cat-tile-label">BIRDS</div>
+        </button>
       </div>
 
-      <div class="menu-buttons">
-        <button class="btn primary big" data-go="play-random">SEND IT</button>
-        <button class="btn" data-go="editor">Build a Map</button>
-        <button class="btn" data-go="levels">My Maps</button>
-        <button class="btn" data-go="aviary">Aviary</button>
-        <button class="btn ghost" id="btn-reset-photos">Wipe Photos</button>
+      <!-- Expand panel — shown when a category is selected -->
+      <div class="cat-panel" id="cat-panel" hidden>
+        <div data-panel="play">
+          <button class="btn primary big" data-go="play-random">SEND IT</button>
+          <button class="btn" data-go="levels">MY MAPS</button>
+        </div>
+        <div data-panel="make">
+          <button class="btn primary" data-go="editor">NEW MAP</button>
+          <label class="btn" for="upload-import">IMPORT
+            <input type="file" id="upload-import" accept="application/json,.json" hidden />
+          </label>
+        </div>
       </div>
 
-      <div class="stats-card" id="stats-card">
-        <div class="stat"><div class="stat-num" id="stat-best">0</div><div class="stat-label">BEST</div></div>
-        <div class="stat"><div class="stat-num" id="stat-combo">0</div><div class="stat-label">STREAK</div></div>
-        <div class="stat"><div class="stat-num" id="stat-games">0</div><div class="stat-label">RUNS</div></div>
-        <div class="stat"><div class="stat-num" id="stat-deaths">0</div><div class="stat-label">CRASHES</div></div>
+      <!-- Customize drawer -->
+      <div class="customize-drawer pix-frame" id="customize-drawer">
+        <button class="customize-toggle" id="customize-toggle" aria-expanded="false">
+          <span class="customize-caret">▶</span> CUSTOMIZE
+        </button>
+        <div class="customize-body" hidden>
+          <div class="upload-grid">
+            <label class="upload-slot" for="upload-bird">
+              <div class="thumb" id="thumb-bird"><span class="thumb-plus">+</span></div>
+              <span>YOUR FACE</span>
+              <input type="file" id="upload-bird" accept="image/*" capture="environment" hidden />
+            </label>
+            <label class="upload-slot" for="upload-pipe">
+              <div class="thumb" id="thumb-pipe"><span class="thumb-plus">+</span></div>
+              <span>OBSTACLES</span>
+              <input type="file" id="upload-pipe" accept="image/*" capture="environment" hidden />
+            </label>
+            <label class="upload-slot" for="upload-bg">
+              <div class="thumb" id="thumb-bg"><span class="thumb-plus">+</span></div>
+              <span>SCENERY</span>
+              <input type="file" id="upload-bg" accept="image/*" capture="environment" hidden />
+            </label>
+          </div>
+          <button class="btn ghost" id="btn-reset-photos">Wipe Photos</button>
+        </div>
+      </div>
+
+      <!-- Stats ribbon -->
+      <div class="stats-ribbon pix-frame" id="stats-card">
+        <div class="stat"><span class="stat-glyph" data-glyph="runs"></span><div class="stat-num" id="stat-best">0</div><div class="stat-label">BEST</div></div>
+        <div class="stat"><span class="stat-glyph" data-glyph="flame"></span><div class="stat-num" id="stat-combo">0</div><div class="stat-label">STREAK</div></div>
+        <div class="stat"><span class="stat-glyph" data-glyph="coin"></span><div class="stat-num" id="stat-runs">0</div><div class="stat-label">RUNS</div></div>
+        <div class="stat"><span class="stat-glyph" data-glyph="skull"></span><div class="stat-num" id="stat-deaths">0</div><div class="stat-label">CRASHES</div></div>
       </div>
 
       <p class="tip" id="tip">Pro tip: keep flapping.</p>
