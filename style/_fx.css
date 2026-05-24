@@ -1,0 +1,46 @@
+/* style/_fx.css — CRT, grain, screen-wipe layers */
+
+.crt-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-crt);
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.18) 0px,
+    rgba(0,0,0,0.18) 1px,
+    transparent 2px,
+    transparent 3px
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  mix-blend-mode: multiply;
+}
+body.fx-scanlines .crt-overlay { opacity: 0.35; }
+
+.grain-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-grain);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  mix-blend-mode: overlay;
+  /* background-image set by ui-fx.js at runtime (data URL of noise canvas) */
+}
+body.fx-grain .grain-overlay { opacity: 0.10; }
+
+@media (prefers-reduced-motion: reduce) {
+  body.fx-scanlines .crt-overlay,
+  body.fx-grain .grain-overlay { opacity: 0 !important; }
+}
+
+.transition-layer {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-transition);
+  pointer-events: none;
+  display: none;
+}
+.transition-layer.active { display: block; }
+.transition-layer canvas { width: 100%; height: 100%; display: block; }
