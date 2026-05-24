@@ -1,1 +1,108 @@
-/* style/_modals.css — populated in Phase 3 */
+/* style/_modals.css — unlock toast + modal overlay styles */
+
+/* ========== UNLOCK TOAST ========== */
+.unlock-toast {
+  position: fixed;
+  top: calc(env(safe-area-inset-top) + 12px);
+  left: 50%;
+  transform: translateX(-50%) translateY(0);
+  background: linear-gradient(135deg, var(--accent), #ff8c42);
+  color: #1a1a2e;
+  padding: 10px 16px;
+  border-radius: 16px;
+  z-index: var(--z-toast);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 6px 0 rgba(0,0,0,0.35), 0 0 24px rgba(255, 209, 102, 0.6);
+  transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.3), opacity 0.2s ease;
+  opacity: 1;
+  visibility: visible;
+}
+.unlock-toast[hidden] {
+  display: flex;
+  transform: translateX(-50%) translateY(-160%);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.unlock-toast-bird {
+  width: 64px;
+  height: 64px;
+  background: rgba(255,255,255,0.4);
+  border-radius: 12px;
+}
+.unlock-toast-label {
+  font-family: var(--font-pixel);
+  font-size: 9px;
+  letter-spacing: 2px;
+  opacity: 0.8;
+}
+.unlock-toast-name {
+  font-family: var(--font-display);
+  font-size: 22px;
+  letter-spacing: 1px;
+}
+
+/* ========== MODAL ========== */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal);
+  padding: 16px;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.18s ease, visibility 0s 0s;
+}
+.modal .modal-inner {
+  transform: scale(1);
+  transition: transform 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+.modal[hidden] {
+  opacity: 0;
+  visibility: hidden;
+  display: flex;
+  pointer-events: none;
+  transition: opacity 0.18s ease, visibility 0s 0.18s;
+}
+.modal[hidden] .modal-inner { transform: scale(0.92); }
+
+.modal-inner {
+  background: var(--bg-2);
+  padding: 22px;
+  border-radius: 18px;
+  width: min(380px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 6px 0 rgba(0,0,0,0.4);
+}
+.modal-inner h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 22px;
+  letter-spacing: 1px;
+}
+.modal-inner input[type="text"] {
+  padding: 14px;
+  border-radius: 12px;
+  border: 2px solid #3a3a5a;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-game);
+  font-size: 20px;
+  letter-spacing: 0.5px;
+}
+.modal-inner input[type="text"]:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.modal-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
