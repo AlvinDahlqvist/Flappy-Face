@@ -551,6 +551,7 @@ function renderInlineUnlock() {
 }
 
 function animateRunSummary({ coins, nearMisses, bestCombo, flaps, durationMs }) {
+  populateMenuGlyphs();   // safe re-run; ensures game-over icons render
   const targets = [
     { id: 'sum-coins',  v: coins },
     { id: 'sum-closes', v: nearMisses },
