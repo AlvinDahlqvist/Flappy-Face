@@ -1101,6 +1101,7 @@ function init() {
   show('menu');
   animateMenuIntro();
   startTipRotator();
+  import('./intro.js').then(({ maybeShowIntro }) => maybeShowIntro({}));
 }
 
 init();

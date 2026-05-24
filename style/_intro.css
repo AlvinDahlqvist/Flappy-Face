@@ -1,1 +1,41 @@
-/* style/_intro.css — populated in Phase 4 */
+/* style/_intro.css */
+
+.intro-root {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-intro);
+  font-family: var(--font-pixel);
+}
+.intro-dim {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+}
+.intro-spotlight {
+  position: absolute;
+  border: 3px solid var(--accent);
+  border-radius: 6px;
+  box-shadow: 0 0 0 9999px rgba(0,0,0,0.55), 0 0 24px rgba(255,209,102,0.7);
+  pointer-events: none;
+  transition: all 0.25s ease;
+}
+.intro-card {
+  position: absolute;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom) + 24px);
+  transform: translateX(-50%);
+  background: var(--bg-2);
+  color: var(--text);
+  padding: 16px 18px;
+  border: 3px solid var(--accent);
+  border-radius: 4px;
+  box-shadow: var(--pix-shadow-1);
+  max-width: min(360px, 90vw);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.intro-step { font-size: 9px; letter-spacing: 2px; color: var(--accent); }
+.intro-title { font-family: var(--font-display); font-size: 24px; letter-spacing: 1px; }
+.intro-body { font-family: var(--font-game); font-size: 16px; opacity: 0.85; }
+.intro-buttons { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
