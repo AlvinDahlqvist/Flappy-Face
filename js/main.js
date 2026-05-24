@@ -11,7 +11,8 @@ import { BIRDS, PHOTO_BIRD_ID, unlockText, getBird, drawWing } from './birds.js'
 import { onUnlock, bootstrapUnlocks, recordTitleClick, isUnlocked, getProgress } from './achievements.js';
 import { loadStats } from './storage.js';
 import { settings } from './settings.js';
-import { installUiFx } from './ui-fx.js';
+import { installUiFx, stampReveal, spawnConfettiAt } from './ui-fx.js';
+import { gradeRun } from './grading.js';
 import { transition } from './transitions.js';
 
 // Lazy-loaded animation lib. Falls back to CSS-only behaviour if CDN fails.
@@ -459,9 +460,24 @@ async function startGame(options) {
         ? 'NICE.'
         : DEATH_MESSAGES[Math.floor(Math.random() * DEATH_MESSAGES.length)];
       document.getElementById('gameover-message').textContent = msg;
+
+      // Compute grade
+      const g = gradeRun({ score, coins, bestCombo, nearMisses, isNewBest: !!isNew });
+      const stamp = document.getElementById('grade-stamp');
+      stamp.textContent = g.grade;
+      stamp.dataset.grade = g.grade;
+
       overlayGameOver.classList.toggle('new-best', !!isNew);
       overlayGameOver.hidden = false;
-      animateRunSummary({ coins, nearMisses, bestCombo, flaps, durationMs });
+
+      // Animate grade stamp in, then confetti, then summary cascade
+      stampReveal(stamp).then(() => {
+        if (currentGame?.particles) {
+          const rect = stamp.getBoundingClientRect();
+          spawnConfettiAt(currentGame.particles, rect, 48);
+        }
+        animateRunSummary({ coins, nearMisses, bestCombo, flaps, durationMs });
+      });
     },
   });
   await currentGame.start();
