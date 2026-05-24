@@ -28,10 +28,10 @@
 .btn.primary {
   background: var(--accent);
   color: var(--ink);
-  border-color: #a8782e;
-  box-shadow: 0 4px 0 #a8782e, inset 0 2px 0 rgba(255,255,255,0.35), 0 0 24px rgba(255, 209, 102, 0.35);
+  border-color: var(--accent-dark);
+  box-shadow: 0 4px 0 var(--accent-dark), inset 0 2px 0 rgba(255,255,255,0.35), 0 0 24px rgba(255, 209, 102, 0.35);
 }
-.btn.primary:active { box-shadow: 0 1px 0 #a8782e, inset 0 2px 0 rgba(255,255,255,0.35); }
+.btn.primary:active { box-shadow: 0 1px 0 var(--accent-dark), inset 0 2px 0 rgba(255,255,255,0.35); }
 .btn.big {
   font-size: 18px;
   letter-spacing: 3px;
@@ -50,8 +50,8 @@
 .btn.small { min-height: 36px; padding: 6px 14px; font-size: 11px; letter-spacing: 0.5px; }
 
 @keyframes btn-pulse {
-  0%, 100% { box-shadow: 0 4px 0 #a8782e, inset 0 2px 0 rgba(255,255,255,0.35), 0 0 24px rgba(255, 209, 102, 0.35); }
-  50%      { box-shadow: 0 4px 0 #a8782e, inset 0 2px 0 rgba(255,255,255,0.35), 0 0 36px rgba(255, 209, 102, 0.65); }
+  0%, 100% { box-shadow: 0 4px 0 var(--accent-dark), inset 0 2px 0 rgba(255,255,255,0.35), 0 0 24px rgba(255, 209, 102, 0.35); }
+  50%      { box-shadow: 0 4px 0 var(--accent-dark), inset 0 2px 0 rgba(255,255,255,0.35), 0 0 36px rgba(255, 209, 102, 0.65); }
 }
 
 /* Pixel-frame card (used by stats ribbon, settings sections, etc.) */

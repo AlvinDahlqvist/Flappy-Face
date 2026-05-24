@@ -15,10 +15,11 @@
   --sky-bottom: #d2eef4;
 
   /* Accents */
-  --accent:    #ffd166;  /* amber */
-  --accent-2:  #ef476f;  /* pink */
-  --accent-3:  #06d6a0;  /* mint */
-  --sunset:    #ff8c42;
+  --accent:      #ffd166;  /* amber */
+  --accent-dark: #a8782e;  /* amber shadow stop */
+  --accent-2:    #ef476f;  /* pink */
+  --accent-3:    #06d6a0;  /* mint */
+  --sunset:      #ff8c42;
 
   /* Text */
   --text:  #f7f7ff;
