@@ -273,7 +273,7 @@ export class Game {
     [this.bird.squashX, this.bird.squashXV] = springStep(this.bird.squashX, this.bird.squashXV, 1, dt);
     [this.bird.squashY, this.bird.squashYV] = springStep(this.bird.squashY, this.bird.squashYV, 1, dt);
 
-    if (this.scene) updateScene(this.scene, dt);
+    if (this.scene) updateScene(this.scene, dt, this.birdState.comboTier);
 
     if (this.state === 'countdown') {
       const num = Math.ceil(this.countdown);
@@ -646,7 +646,7 @@ export class Game {
       ctx.fillStyle = 'rgba(0,0,0,0.15)';
       ctx.fillRect(0, 0, viewW, viewH);
     } else if (this.scene) {
-      drawScene(ctx, this.scene, this.scrollX, this.timeElapsed, viewW, viewH, this.groundY);
+      drawScene(ctx, this.scene, this.scrollX, this.timeElapsed, viewW, viewH, this.groundY, this.birdState.comboTier);
     }
 
     // ===== pipes =====

@@ -141,14 +141,14 @@ function buildGrassTufts(viewW) {
 
 // ============ DRAW SCENE ============
 
-export function updateScene(scene, dt) {
+export function updateScene(scene, dt, tier = 0) {
   for (const b of scene.balloons) {
-    b.x -= b.speed * dt;
+    b.x -= b.speed * dt * (1 + tier * 0.3);
     if (b.x < -60) b.x = scene.viewW + 60;
   }
 }
 
-export function drawScene(ctx, scene, scrollX, time, viewW, viewH, groundY) {
+export function drawScene(ctx, scene, scrollX, time, viewW, viewH, groundY, tier = 0) {
   const t = scene.theme;
 
   // 1. Sky gradient (3-stop)
@@ -175,9 +175,9 @@ export function drawScene(ctx, scene, scrollX, time, viewW, viewH, groundY) {
 
   // 3. Sun or Moon
   if (t.lightKind === 'moon') {
-    drawMoon(ctx, viewW * 0.78, groundY * 0.22, 38, time, t);
+    drawMoon(ctx, viewW * 0.78, groundY * 0.22, 38, time, t, tier);
   } else {
-    drawSun(ctx, viewW * 0.83, groundY * 0.20, 36, time, t);
+    drawSun(ctx, viewW * 0.83, groundY * 0.20, 36, time, t, tier);
   }
 
   // 4. City silhouettes (far, then near)
@@ -245,8 +245,8 @@ export function drawGround(ctx, scene, scrollX, time, viewW, viewH, groundY) {
 
 // ============ LIGHT SOURCES ============
 
-function drawSun(ctx, x, y, r, t, theme) {
-  const pulse = 1 + Math.sin(t * 1.2) * 0.04;
+function drawSun(ctx, x, y, r, t, theme, tier = 0) {
+  const pulse = 1 + Math.sin(t * 1.2) * (0.04 + tier * 0.025);
   ctx.save();
   ctx.translate(x, y);
   // halo
@@ -282,16 +282,17 @@ function drawSun(ctx, x, y, r, t, theme) {
   ctx.restore();
 }
 
-function drawMoon(ctx, x, y, r, t, theme) {
+function drawMoon(ctx, x, y, r, t, theme, tier = 0) {
   ctx.save();
   ctx.translate(x, y);
-  // soft glow halo
-  const halo = ctx.createRadialGradient(0, 0, r * 0.6, 0, 0, r * 2.2);
-  halo.addColorStop(0, 'rgba(232, 238, 245, 0.4)');
+  // soft glow halo — amplitude grows with combo tier
+  const haloPulse = 1 + Math.sin(t * 1.4) * (0.05 + tier * 0.04);
+  const halo = ctx.createRadialGradient(0, 0, r * 0.6, 0, 0, r * 2.2 * haloPulse);
+  halo.addColorStop(0, `rgba(232, 238, 245, ${0.4 + tier * 0.08})`);
   halo.addColorStop(1, 'rgba(232, 238, 245, 0)');
   ctx.fillStyle = halo;
   ctx.beginPath();
-  ctx.arc(0, 0, r * 2.2, 0, Math.PI * 2);
+  ctx.arc(0, 0, r * 2.2 * haloPulse, 0, Math.PI * 2);
   ctx.fill();
   // moon body
   const disc = ctx.createRadialGradient(-r * 0.3, -r * 0.3, r * 0.2, 0, 0, r);

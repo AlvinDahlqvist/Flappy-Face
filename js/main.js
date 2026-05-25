@@ -442,6 +442,11 @@ async function startGame(options) {
         meter.classList.add('broken');
         setTimeout(() => meter.classList.remove('broken'), 400);
       }
+      // Combo-driven score aura
+      const score = document.getElementById('score');
+      score.classList.remove('combo-aura-1', 'combo-aura-2', 'combo-aura-3');
+      const tier = streak >= 15 ? 3 : streak >= 10 ? 2 : streak >= 5 ? 1 : 0;
+      if (tier > 0) score.classList.add(`combo-aura-${tier}`);
     },
     onCoin: (total) => {
       const num = document.getElementById('hud-coins-num');
