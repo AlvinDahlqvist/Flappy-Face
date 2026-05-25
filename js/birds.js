@@ -145,24 +145,22 @@ export function unlockText(unlock) {
 // Body with built-in radial gradient (light top-left → main → dark bottom-right)
 // and a thick dark outline. Pass `light` and `dark` for the gradient stops.
 function shadedBody(ctx, r, light, main, dark, outline = '#1a1a2e') {
-  const g = ctx.createRadialGradient(-r * 0.35, -r * 0.4, r * 0.1, 0, 0, r * 1.15);
+  const g = ctx.createRadialGradient(pxSnap(-r * 0.35), pxSnap(-r * 0.4), pxSnap(r * 0.1), 0, 0, pxSnap(r * 1.15));
   g.addColorStop(0, light);
   g.addColorStop(0.55, main);
   g.addColorStop(1, dark);
   ctx.fillStyle = g;
   ctx.beginPath();
-  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  ctx.arc(0, 0, pxSnap(r), 0, Math.PI * 2);
   ctx.fill();
-  // shine highlight
   ctx.fillStyle = 'rgba(255,255,255,0.22)';
   ctx.beginPath();
-  ctx.ellipse(-r * 0.35, -r * 0.45, r * 0.35, r * 0.18, -0.4, 0, Math.PI * 2);
+  ctx.ellipse(pxSnap(-r * 0.35), pxSnap(-r * 0.45), pxSnap(r * 0.35), pxSnap(r * 0.18), -0.4, 0, Math.PI * 2);
   ctx.fill();
-  // thick outline
   ctx.strokeStyle = outline;
   ctx.lineWidth = Math.max(2, r * 0.085);
   ctx.beginPath();
-  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  ctx.arc(0, 0, pxSnap(r), 0, Math.PI * 2);
   ctx.stroke();
 }
 
@@ -177,51 +175,45 @@ function circleBody(ctx, r, fill, stroke = '#1a1a2e') {
 }
 
 function standardEye(ctx, r) {
-  // eye white with thick outline
   ctx.fillStyle = '#fff';
   ctx.strokeStyle = '#1a1a2e';
   ctx.lineWidth = Math.max(1.5, r * 0.06);
   ctx.beginPath();
-  ctx.arc(r * 0.30, -r * 0.18, r * 0.28, 0, Math.PI * 2);
+  ctx.arc(pxSnap(r * 0.30), pxSnap(-r * 0.18), pxSnap(r * 0.28), 0, Math.PI * 2);
   ctx.fill();
   ctx.stroke();
-  // big pupil
   ctx.fillStyle = '#1a1a2e';
   ctx.beginPath();
-  ctx.arc(r * 0.36, -r * 0.14, r * 0.16, 0, Math.PI * 2);
+  ctx.arc(pxSnap(r * 0.36), pxSnap(-r * 0.14), pxSnap(r * 0.16), 0, Math.PI * 2);
   ctx.fill();
-  // sparkle
   ctx.fillStyle = '#fff';
   ctx.beginPath();
-  ctx.arc(r * 0.40, -r * 0.20, r * 0.06, 0, Math.PI * 2);
+  ctx.arc(pxSnap(r * 0.40), pxSnap(-r * 0.20), pxSnap(r * 0.06), 0, Math.PI * 2);
   ctx.fill();
 }
 
 function beak(ctx, r, color = '#ef476f', dark = '#b8323d') {
-  // top half (lighter)
   ctx.fillStyle = color;
   ctx.beginPath();
-  ctx.moveTo(r * 0.55, -r * 0.02);
-  ctx.lineTo(r * 1.40, -r * 0.20);
-  ctx.lineTo(r * 1.40, r * 0.02);
+  ctx.moveTo(pxSnap(r * 0.55), pxSnap(-r * 0.02));
+  ctx.lineTo(pxSnap(r * 1.40), pxSnap(-r * 0.20));
+  ctx.lineTo(pxSnap(r * 1.40), pxSnap(r * 0.02));
   ctx.closePath();
   ctx.fill();
-  // bottom half (darker)
   ctx.fillStyle = dark;
   ctx.beginPath();
-  ctx.moveTo(r * 0.55, r * 0.02);
-  ctx.lineTo(r * 1.40, r * 0.02);
-  ctx.lineTo(r * 1.40, r * 0.20);
+  ctx.moveTo(pxSnap(r * 0.55), pxSnap(r * 0.02));
+  ctx.lineTo(pxSnap(r * 1.40), pxSnap(r * 0.02));
+  ctx.lineTo(pxSnap(r * 1.40), pxSnap(r * 0.20));
   ctx.closePath();
   ctx.fill();
-  // outline
   ctx.strokeStyle = '#1a1a2e';
   ctx.lineWidth = Math.max(1.5, r * 0.07);
   ctx.beginPath();
-  ctx.moveTo(r * 0.55, -r * 0.02);
-  ctx.lineTo(r * 1.40, -r * 0.20);
-  ctx.lineTo(r * 1.40, r * 0.20);
-  ctx.lineTo(r * 0.55, r * 0.02);
+  ctx.moveTo(pxSnap(r * 0.55), pxSnap(-r * 0.02));
+  ctx.lineTo(pxSnap(r * 1.40), pxSnap(-r * 0.20));
+  ctx.lineTo(pxSnap(r * 1.40), pxSnap(r * 0.20));
+  ctx.lineTo(pxSnap(r * 0.55), pxSnap(r * 0.02));
   ctx.closePath();
   ctx.stroke();
 }
@@ -229,9 +221,13 @@ function beak(ctx, r, color = '#ef476f', dark = '#b8323d') {
 function cheek(ctx, r, color = 'rgba(239, 71, 111, 0.55)') {
   ctx.fillStyle = color;
   ctx.beginPath();
-  ctx.arc(r * 0.05, r * 0.30, r * 0.20, 0, Math.PI * 2);
+  ctx.arc(pxSnap(r * 0.05), pxSnap(r * 0.30), pxSnap(r * 0.20), 0, Math.PI * 2);
   ctx.fill();
 }
+
+// Round to nearest integer pixel — sharpens the procedural sprites against the
+// parallax scene. Used by shared body / eye / beak / cheek helpers.
+function pxSnap(v) { return Math.round(v); }
 
 // Tail feathers — 1-2 angled triangles behind the body.
 // style: 'fan' (default, two triangles), 'point' (single), 'wispy' (translucent for ghost)
