@@ -233,9 +233,65 @@ function cheek(ctx, r, color = 'rgba(239, 71, 111, 0.55)') {
   ctx.fill();
 }
 
+// Tail feathers — 1-2 angled triangles behind the body.
+// style: 'fan' (default, two triangles), 'point' (single), 'wispy' (translucent for ghost)
+function tailFeathers(ctx, r, fill, stroke = '#1a1a2e', style = 'fan') {
+  ctx.save();
+  ctx.lineWidth = Math.max(1.5, r * 0.06);
+  ctx.strokeStyle = stroke;
+
+  if (style === 'wispy') {
+    ctx.fillStyle = fill;
+    ctx.globalAlpha = 0.7;
+    ctx.beginPath();
+    ctx.moveTo(-r * 0.95, 0);
+    ctx.quadraticCurveTo(-r * 1.65, -r * 0.20, -r * 1.40, r * 0.25);
+    ctx.quadraticCurveTo(-r * 1.10, r * 0.05, -r * 0.95, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+    return;
+  }
+
+  if (style === 'point') {
+    ctx.fillStyle = fill;
+    ctx.beginPath();
+    ctx.moveTo(-r * 0.85, -r * 0.15);
+    ctx.lineTo(-r * 1.55, 0);
+    ctx.lineTo(-r * 0.85, r * 0.20);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+    return;
+  }
+
+  // 'fan' (default): upper + lower triangle
+  ctx.fillStyle = fill;
+  // upper triangle
+  ctx.beginPath();
+  ctx.moveTo(-r * 0.85, -r * 0.20);
+  ctx.lineTo(-r * 1.45, -r * 0.35);
+  ctx.lineTo(-r * 0.85, r * 0.05);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  // lower triangle
+  ctx.beginPath();
+  ctx.moveTo(-r * 0.85, -r * 0.02);
+  ctx.lineTo(-r * 1.50, r * 0.10);
+  ctx.lineTo(-r * 0.85, r * 0.28);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+}
+
 // ============ BIRDS ============
 
 function drawBuddy(ctx, r) {
+  tailFeathers(ctx, r, '#ffd166');
   shadedBody(ctx, r, '#fff2a8', '#ffd166', '#c8961c');
   cheek(ctx, r);
   standardEye(ctx, r);
@@ -243,6 +299,7 @@ function drawBuddy(ctx, r) {
 }
 
 function drawPunk(ctx, r) {
+  tailFeathers(ctx, r, '#ec4899', '#1a1a2e', 'fan');
   shadedBody(ctx, r, '#ffb0d2', '#ec4899', '#a8336b');
   cheek(ctx, r, 'rgba(255, 80, 130, 0.6)');
   beak(ctx, r, '#fb923c', '#a04a0d');
@@ -271,6 +328,7 @@ function drawPunk(ctx, r) {
 }
 
 function drawChill(ctx, r) {
+  tailFeathers(ctx, r, '#118ab2', '#1a1a2e', 'fan');
   shadedBody(ctx, r, '#7fcfe6', '#118ab2', '#0a5b7a');
   cheek(ctx, r, 'rgba(80, 180, 220, 0.55)');
   beak(ctx, r, '#ffa657', '#a45d18');
@@ -302,6 +360,7 @@ function drawChill(ctx, r) {
 }
 
 function drawRoyal(ctx, r) {
+  tailFeathers(ctx, r, '#a86bb4', '#1a1a2e', 'fan');
   shadedBody(ctx, r, '#d8a8e0', '#a86bb4', '#6e3a7a');
   cheek(ctx, r, 'rgba(220, 140, 220, 0.55)');
   standardEye(ctx, r);
@@ -335,6 +394,7 @@ function drawRoyal(ctx, r) {
 }
 
 function drawGhost(ctx, r) {
+  tailFeathers(ctx, r, 'rgba(255,255,255,0.6)', 'rgba(170,186,212,0.7)', 'wispy');
   // build ghost shape path
   ctx.beginPath();
   ctx.arc(0, 0, r, Math.PI, Math.PI * 2);
@@ -381,6 +441,7 @@ function drawGhost(ctx, r) {
 }
 
 function drawRainbow(ctx, r) {
+  tailFeathers(ctx, r, '#a86bb4', '#1a1a2e', 'point');
   ctx.save();
   ctx.beginPath();
   ctx.arc(0, 0, r, 0, Math.PI * 2);
@@ -410,6 +471,7 @@ function drawRainbow(ctx, r) {
 }
 
 function drawPizza(ctx, r) {
+  tailFeathers(ctx, r, '#b87333', '#1a1a2e', 'fan');
   // cheese body with shading
   shadedBody(ctx, r, '#fee489', '#f4c430', '#b88e10', '#7a4f00');
   // crust ring
@@ -464,6 +526,7 @@ function drawPizza(ctx, r) {
 }
 
 function drawDaredevil(ctx, r) {
+  tailFeathers(ctx, r, '#e63b3b', '#1a1a2e', 'point');
   shadedBody(ctx, r, '#ff8a7e', '#e63b3b', '#8e1e1e');
   cheek(ctx, r, 'rgba(255, 100, 100, 0.55)');
   // wide nervous eye
@@ -503,6 +566,7 @@ function drawDaredevil(ctx, r) {
 }
 
 function drawCollector(ctx, r) {
+  tailFeathers(ctx, r, '#79c244', '#1a1a2e', 'fan');
   shadedBody(ctx, r, '#cef0a8', '#79c244', '#3d6e20');
   cheek(ctx, r, 'rgba(120, 200, 80, 0.55)');
   standardEye(ctx, r);
@@ -531,6 +595,7 @@ function drawCollector(ctx, r) {
 }
 
 function drawLegend(ctx, r) {
+  tailFeathers(ctx, r, '#ffd166', '#1a1a2e', 'fan');
   shadedBody(ctx, r, '#fff6a8', '#ffd166', '#b8861d', '#1a1a2e');
   cheek(ctx, r, 'rgba(255, 105, 130, 0.55)');
   standardEye(ctx, r);
