@@ -765,6 +765,11 @@ export class Game {
       }
     }
 
+    // ===== bird-specific tell (drawn behind the bird; uses screen-space coords directly) =====
+    if (this.state === 'playing' && this.birdMeta && this.birdMeta.tell && !isReducedMotion()) {
+      this.birdMeta.tell(ctx, this, this.particles);
+    }
+
     // ===== bird (skip when exploded) =====
     if (this.state !== 'over') {
       this.drawBird(this.state === 'dying');

@@ -51,6 +51,7 @@ export const BIRDS = {
     wingFill: 'rgba(255,255,255,0.75)',
     wingStroke: '#aabad4',
     draw: drawGhost,
+    tell: ghostTell,
   },
   rainbow: {
     id: 'rainbow',
@@ -60,6 +61,7 @@ export const BIRDS = {
     wingFill: '#ffffff',
     wingStroke: '#666',
     draw: drawRainbow,
+    tell: rainbowTell,
   },
   pizza: {
     id: 'pizza',
@@ -69,6 +71,7 @@ export const BIRDS = {
     wingFill: '#fff1c8',
     wingStroke: '#b87333',
     draw: drawPizza,
+    tell: pizzaTell,
   },
   daredevil: {
     id: 'daredevil',
@@ -78,6 +81,7 @@ export const BIRDS = {
     wingFill: '#ffb8a8',
     wingStroke: '#a83020',
     draw: drawDaredevil,
+    tell: daredevilTell,
   },
   collector: {
     id: 'collector',
@@ -703,4 +707,113 @@ function drawLegend(ctx, r) {
   ctx.beginPath();
   ctx.ellipse(0, -r * 1.45, r * 0.68, r * 0.20, 0, 0, Math.PI * 2);
   ctx.stroke();
+}
+
+// ============ BIRD TELLS ============
+// Each tell renders in SCREEN coords (the trail in gameCtx.birdTrail uses
+// bird.x/bird.y, which are already screen-space). The wrapper code in
+// game.js calls tells BEFORE drawBird, so they always sit behind the bird.
+
+// Ghost — 3 fading afterimage circles at past positions.
+function ghostTell(ctx, gameCtx, particles) {
+  const trail = gameCtx.birdTrail || [];
+  const len = trail.length;
+  if (len < 2) return;
+  const r = gameCtx.bird?.r || 18;
+  ctx.save();
+  for (let i = 0; i < Math.min(3, len - 1); i++) {
+    const t = trail[len - 2 - i];
+    if (!t) break;
+    const alpha = 0.32 * (1 - i / 3);
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = '#e8eef5';
+    ctx.strokeStyle = 'rgba(170,186,212,0.6)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(t.x, t.y, r * (0.95 - i * 0.06), 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// Rainbow — multi-color streak along the trail; width and saturation scale with combo.
+function rainbowTell(ctx, gameCtx, particles) {
+  const trail = gameCtx.birdTrail || [];
+  const len = trail.length;
+  if (len < 2) return;
+  const r = gameCtx.bird?.r || 18;
+  const combo = gameCtx.combo || 0;
+  const intensity = Math.min(1, combo / 10);
+  const baseWidth = r * 1.2;
+  const colors = ['#ef476f', '#ffa657', '#ffd166', '#06d6a0', '#118ab2', '#a86bb4'];
+  const shift = Math.floor(performance.now() * 0.01);
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.globalAlpha = 0.35 + intensity * 0.4;
+  for (let i = 0; i < len - 1; i++) {
+    const a = trail[i];
+    const b = trail[i + 1];
+    ctx.strokeStyle = colors[(i + shift) % colors.length];
+    ctx.lineWidth = baseWidth * ((i + 1) / len);
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(b.x, b.y);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// Pizza — drop a small yellow crumb behind the bird every ~400ms.
+// Pure ctx-drawn ephemeral marks (no ParticleSystem coupling) — kept in a tiny
+// rolling buffer in module scope so they fade out naturally.
+const pizzaCrumbs = [];
+let lastCrumb = 0;
+function pizzaTell(ctx, gameCtx, particles) {
+  const now = performance.now();
+  if (now - lastCrumb > 400) {
+    lastCrumb = now;
+    pizzaCrumbs.push({
+      x: gameCtx.bird.x - gameCtx.bird.r * 0.4,
+      y: gameCtx.bird.y + 3,
+      vx: -30 + Math.random() * 20,
+      vy: -20 - Math.random() * 20,
+      born: now,
+    });
+    if (pizzaCrumbs.length > 24) pizzaCrumbs.shift();
+  }
+  ctx.save();
+  for (let i = pizzaCrumbs.length - 1; i >= 0; i--) {
+    const c = pizzaCrumbs[i];
+    const age = (now - c.born) / 1000;
+    if (age > 1.4) { pizzaCrumbs.splice(i, 1); continue; }
+    c.x += c.vx * (1 / 60);
+    c.vy += 360 * (1 / 60);
+    c.y += c.vy * (1 / 60);
+    ctx.globalAlpha = Math.max(0, 1 - age / 1.4);
+    ctx.fillStyle = '#f4c430';
+    ctx.fillRect(c.x, c.y, 3, 3);
+  }
+  ctx.restore();
+}
+
+// Daredevil — 4 jittery horizontal speed lines behind the bird.
+function daredevilTell(ctx, gameCtx, particles) {
+  const r = gameCtx.bird?.r || 18;
+  const bx = gameCtx.bird.x;
+  const by = gameCtx.bird.y;
+  ctx.save();
+  ctx.strokeStyle = 'rgba(255, 80, 60, 0.6)';
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  const offsets = [-r * 0.45, -r * 0.18, r * 0.18, r * 0.45];
+  for (const yOff of offsets) {
+    const len = 38 + Math.random() * 22;
+    const startX = bx - r * 0.85;
+    ctx.beginPath();
+    ctx.moveTo(startX, by + yOff);
+    ctx.lineTo(startX - len, by + yOff);
+    ctx.stroke();
+  }
+  ctx.restore();
 }
