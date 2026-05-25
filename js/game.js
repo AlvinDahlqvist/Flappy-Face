@@ -152,7 +152,14 @@ export class Game {
     // themeOverride can be a string id ('day'|'dusk'|'night') from Settings,
     // an actual THEMES object, or null. Resolve to a theme object either way.
     const override = this.options.themeOverride;
-    const resolvedOverride = typeof override === 'string' ? THEMES[override] : override;
+    let resolvedOverride = null;
+    if (typeof override === 'string' && THEMES && THEMES[override]) {
+      resolvedOverride = THEMES[override];
+    } else if (override && typeof override === 'object' && override.skyTop) {
+      resolvedOverride = override;
+    } else if (override) {
+      console.warn('themeOverride could not be resolved to a theme:', override);
+    }
     this.theme = resolvedOverride || pickTheme();
     recordGameStart();
     this.resize();
