@@ -2,7 +2,7 @@ import { loadAllPhotos } from './assets.js';
 import { saveHighscore, loadHighscore, loadSelectedBird } from './storage.js';
 import { onFlap, fitCanvas } from './input.js';
 import { audio, ScreenShake, ParticleSystem, spawnConfetti, spawnFragments, springStep, spawnRingBurst } from './effects.js';
-import { BIRDS, PHOTO_BIRD_ID, getBird, drawWing } from './birds.js';
+import { BIRDS, PHOTO_BIRD_ID, getBird, drawWing, drawBirdWithState } from './birds.js';
 import { recordGameStart, recordDeath, recordScore, recordCustomComplete, recordCombo, recordCoins, recordNearMisses } from './achievements.js';
 import { pickTheme, buildScene, updateScene, drawScene, drawGround } from './scene.js';
 
@@ -896,8 +896,16 @@ export class Game {
     drawWing(ctx, r, bird.wingFlap, wingFill, wingStroke);
 
     // ====== BODY ======
-    const s = this.birdSprite.totalSize || r * 2;
-    ctx.drawImage(this.birdSprite.canvas, -s / 2, -s / 2, s, s);
+    if (this.birdMeta) {
+      // Procedural bird — route through drawBirdWithState so pose transforms
+      // and eye-event overlays are applied each render frame.
+      drawBirdWithState(this.birdMeta, ctx, r, this.birdState);
+    } else {
+      // Photo bird — drawn from pre-rendered sprite (circle-clipped image).
+      // DO NOT wrap with drawBirdWithState; the bird.draw() API does not apply.
+      const s = this.birdSprite.totalSize || r * 2;
+      ctx.drawImage(this.birdSprite.canvas, -s / 2, -s / 2, s, s);
+    }
 
     // ====== X-EYES (only when dying) ======
     if (dying) {

@@ -331,6 +331,33 @@ export function drawEyeOverlay(ctx, r, event) {
   }
 }
 
+// Wrapper that applies pose transforms + eye-event overlay around the bird's draw.
+// Pose codes: 'idle' | 'flap' | 'dive' | 'scrunch' | 'lean'.
+//   - flap: vertical squish driven by state.flapPhase (0..1)
+//   - dive: stretched vertical
+//   - scrunch: small uniform compression
+//   - lean: small forward translate
+export function drawBirdWithState(bird, ctx, r, state) {
+  ctx.save();
+  if (state) {
+    if (state.pose === 'flap') {
+      const f = Math.max(0, Math.min(1, state.flapPhase));
+      ctx.scale(1 - 0.25 * f, 1 + 0.18 * f);
+    } else if (state.pose === 'dive') {
+      ctx.scale(0.9, 1.15);
+    } else if (state.pose === 'scrunch') {
+      ctx.scale(0.85, 0.85);
+    } else if (state.pose === 'lean') {
+      ctx.translate(2, 0);
+    }
+  }
+  bird.draw(ctx, r);
+  if (state && state.eyeEvent) {
+    drawEyeOverlay(ctx, r, state.eyeEvent);
+  }
+  ctx.restore();
+}
+
 // ============ BIRDS ============
 
 function drawBuddy(ctx, r) {
