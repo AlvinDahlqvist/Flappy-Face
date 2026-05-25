@@ -224,8 +224,19 @@ export class Game {
     this.bestComboThisRun = 0;
     this.runStartTime = 0;
     this.runDurationMs = 0;
+    // Reset bird visual state so a previous run's eye-event / pose doesn't bleed in.
+    this.birdState.pose = 'idle';
+    this.birdState.flapPhase = 0;
+    this.birdState.flapPhaseV = 0;
+    this.birdState.eyeEvent = null;
+    this.birdState.eyeEventTtl = 0;
+    this.birdState.comboTier = 0;
+    this.birdState.recentDamageSource = null;
+    this.birdTrail = [];
+    this.bulletTimeActive = false;
+    this.bulletTimeStart = 0;
     this.onCombo(0);
-    if (_prevCombo >= 5) this._setEyeEvent('comboBreak', 320);
+    if (_prevCombo >= 5) this._setEyeEvent('comboBreak', 0.32);
 
     if (this.options.mode === 'custom' && this.options.level) {
       this.customPipes = (this.options.level.obstacles || []).map(o => ({ ...o }));
@@ -486,7 +497,7 @@ export class Game {
         this.lastNearMissPipeId = p.id;
         this.nearMisses += 1;
         this.onNearMiss(this.nearMisses);
-        this._setEyeEvent('nearMiss', 220);
+        this._setEyeEvent('nearMiss', 0.22);
         this.score += 2;            // bonus for risk
         audio.play('hover');        // quick whoosh
         this.shake.kick(3);
@@ -544,7 +555,7 @@ export class Game {
         c.collected = true;
         this.coinsCollected += 1;
         this.onCoin(this.coinsCollected);
-        this._setEyeEvent('coin', 280);
+        this._setEyeEvent('coin', 0.28);
         this.score += 5;
         this.shake.kick(3);
         audio.play('score');
@@ -715,8 +726,8 @@ export class Game {
       const reduced = isReducedMotion();
       const wobX = reduced ? 0 : Math.sin(performance.now() * 0.03) * (p.wobble || 0) * 4;
       const screenX = px + wobX;
-      const rise = Math.min(1, (p.spawnAge || 0) / 250);
-      const yOffset = reduced ? 0 : (1 - easeOutBack(rise)) * 80;
+      const rise = Math.min(1, (p.spawnAge || 0) / 0.25);   // spawnAge is seconds; complete rise in 250ms
+      const yOffset = reduced ? 0 : (1 - easeOutBack(rise)) * 32;
       this.drawPipe(screenX, 0 + yOffset, PIPE_WIDTH, p.gapY - p.gap / 2, true, p.color);
       this.drawPipe(screenX, p.gapY + p.gap / 2 + yOffset, PIPE_WIDTH, this.groundY - (p.gapY + p.gap / 2), false, p.color);
     }
@@ -840,9 +851,9 @@ export class Game {
     return false;
   }
 
-  _setEyeEvent(event, ms = 250) {
+  _setEyeEvent(event, seconds = 0.25) {
     this.birdState.eyeEvent = event;
-    this.birdState.eyeEventTtl = ms;
+    this.birdState.eyeEventTtl = seconds;
   }
 
   _updateBirdState(dt) {
@@ -851,7 +862,7 @@ export class Game {
       this.birdState.flapPhase = 0;
       this.birdState.flapPhaseV = 0;
     } else {
-      [this.birdState.flapPhase, this.birdState.flapPhaseV] = springStep(this.birdState.flapPhase, this.birdState.flapPhaseV, 0, dt / 1000, 240, 22);
+      [this.birdState.flapPhase, this.birdState.flapPhaseV] = springStep(this.birdState.flapPhase, this.birdState.flapPhaseV, 0, dt, 240, 22);
       if (Math.abs(this.birdState.flapPhase) < 0.002) {
         this.birdState.flapPhase = 0;
         this.birdState.flapPhaseV = 0;
