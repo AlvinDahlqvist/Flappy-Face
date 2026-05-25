@@ -81,6 +81,18 @@ export class Game {
     this.bestComboThisRun = 0;
     this.runStartTime = 0;
     this.runDurationMs = 0;
+    // Bird visual state — drives pose transforms and eye overlays each render frame.
+    this.birdState = {
+      pose: 'idle',
+      flapPhase: 0,
+      flapPhaseV: 0,
+      eyeEvent: null,
+      eyeEventTtl: 0,
+      comboTier: 0,
+      recentDamageSource: null,
+    };
+    // Trail of past bird positions for ghost/rainbow tells (oldest → newest).
+    this.birdTrail = [];
   }
 
   async start() {
@@ -395,6 +407,8 @@ export class Game {
     if (this.checkCollision()) {
       this.die();
     }
+
+    this._updateBirdState(dt);
   }
 
   // Fire once per pipe when bird passes within NEAR_MISS px of either gap edge.
@@ -719,6 +733,35 @@ export class Game {
     }
 
     ctx.restore();
+  }
+
+  _updateBirdState(dt) {
+    // Decay flapPhase toward 0 with a spring so it overshoots back.
+    [this.birdState.flapPhase, this.birdState.flapPhaseV] = springStep(this.birdState.flapPhase, this.birdState.flapPhaseV, 0, dt / 1000, 240, 22);
+    if (Math.abs(this.birdState.flapPhase) < 0.002) {
+      this.birdState.flapPhase = 0;
+      this.birdState.flapPhaseV = 0;
+    }
+
+    // Eye event TTL countdown
+    if (this.birdState.eyeEvent) {
+      this.birdState.eyeEventTtl -= dt;
+      if (this.birdState.eyeEventTtl <= 0) {
+        this.birdState.eyeEvent = null;
+      }
+    }
+
+    // Combo tier (0..3) — placeholder pose handling (Task B.3 refines)
+    const c = this.combo || 0;
+    this.birdState.comboTier = c >= 15 ? 3 : c >= 10 ? 2 : c >= 5 ? 1 : 0;
+    if (this.birdState.flapPhase > 0.05) this.birdState.pose = 'flap';
+    else this.birdState.pose = 'idle';
+
+    // Push current bird position into trail for tells in Phase D.
+    if (this.bird) {
+      this.birdTrail.push({ x: this.bird.x, y: this.bird.y, t: performance.now() });
+      if (this.birdTrail.length > 10) this.birdTrail.shift();
+    }
   }
 
   drawCountdownNumber(text, tFrac, color = '#ffd166') {
