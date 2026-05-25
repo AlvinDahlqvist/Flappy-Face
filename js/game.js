@@ -662,14 +662,30 @@ export class Game {
   }
 
   explodeIntoFragments() {
+    const src = this.birdState.recentDamageSource;
+    // Branch shatter velocity + camera nudge by damage source.
+    let vx = 0, vy = this.bird.vy, kick = 8;
+    if (src === 'topPipe') {
+      vx = -40 - Math.random() * 30;
+      vy = Math.max(this.bird.vy, 220);
+      kick = 12;
+    } else if (src === 'bottomPipe') {
+      vx = 40 + Math.random() * 30;
+      vy = -180 - Math.random() * 40;
+      kick = 12;
+    } else if (src === 'ground') {
+      vx = (Math.random() - 0.5) * 140;
+      vy = -60 - Math.random() * 30;
+      kick = 14;
+      // Brown dust ring at impact point
+      spawnRingBurst(this.particles, this.bird.x, this.groundY, '#aa9966', 24);
+    }
     spawnFragments(this.particles, {
       x: this.bird.x, y: this.bird.y,
-      vy: this.bird.vy, vx: 0,
+      vy, vx,
       radius: BIRD_RADIUS,
     }, this.birdFragSource || this.assets.bird);
-    this.shake.kick(8);
-    // The 'over' branch in update() will fire onGameOver after this delay,
-    // giving the player ~600ms to see the fragments fly + screen shake.
+    this.shake.kick(kick);
     this.overlayDelay = 0.6;
   }
 
