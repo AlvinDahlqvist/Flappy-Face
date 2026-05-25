@@ -103,6 +103,8 @@ export class Game {
       flapPhaseV: 0,
       eyeEvent: null,
       eyeEventTtl: 0,
+      blinkPhase: 0,         // 1 = eye fully closed, 0 = fully open
+      nextBlinkIn: 2 + Math.random() * 3,   // seconds until next idle blink
       comboTier: 0,
       recentDamageSource: null,
     };
@@ -249,6 +251,8 @@ export class Game {
     this.birdState.flapPhaseV = 0;
     this.birdState.eyeEvent = null;
     this.birdState.eyeEventTtl = 0;
+    this.birdState.blinkPhase = 0;
+    this.birdState.nextBlinkIn = 2 + Math.random() * 3;
     this.birdState.comboTier = 0;
     this.birdState.recentDamageSource = null;
     this.birdTrail = [];
@@ -914,6 +918,22 @@ export class Game {
     else if (inFlap)    this.birdState.pose = 'flap';
     else if (highCombo) this.birdState.pose = 'lean';
     else                this.birdState.pose = 'idle';
+
+    // Idle blink — only when calm (idle or leaning), no active eye event, not reduced-motion.
+    const canBlink = !isReducedMotion()
+      && (this.birdState.pose === 'idle' || this.birdState.pose === 'lean')
+      && !this.birdState.eyeEvent
+      && this.state === 'playing';
+    if (this.birdState.blinkPhase > 0) {
+      // Eye is closing/opening — decay over ~120ms total per phase
+      this.birdState.blinkPhase = Math.max(0, this.birdState.blinkPhase - dt * 8);
+    } else if (canBlink) {
+      this.birdState.nextBlinkIn -= dt;
+      if (this.birdState.nextBlinkIn <= 0) {
+        this.birdState.blinkPhase = 1;
+        this.birdState.nextBlinkIn = 2 + Math.random() * 3;   // next blink in 2-5s
+      }
+    }
 
     // Push current bird position into trail for tells in Phase D.
     if (this.bird) {

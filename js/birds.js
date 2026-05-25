@@ -337,6 +337,26 @@ export function drawEyeOverlay(ctx, r, event) {
   }
 }
 
+// Eye-blink overlay — draws a horizontal slit over the standard eye position.
+// phase is 0..1 where 1 = fully closed. Uses the bird's outline color to feel native.
+// `birdId` lets us position the slit correctly for birds whose eye isn't in the standard spot.
+export function drawBlinkOverlay(ctx, r, phase, birdId) {
+  if (phase <= 0) return;
+  // Eye position by bird (defaults to standard right-eye position).
+  let ex = pxSnap(r * 0.30);
+  let ey = pxSnap(-r * 0.18);
+  let ew = pxSnap(r * 0.56);
+  if (birdId === 'pizza')  { ex = pxSnap(r * 0.30); ey = pxSnap(-r * 0.55); ew = pxSnap(r * 0.34); }
+  if (birdId === 'daredevil') { ex = pxSnap(r * 0.28); ey = pxSnap(-r * 0.18); ew = pxSnap(r * 0.64); }
+  if (birdId === 'ghost' || birdId === 'punk' || birdId === 'chill') return; // these birds don't have a visible standard eye
+  // Slit height grows with phase so the blink "snaps" closed.
+  const slitH = Math.max(2, pxSnap(r * 0.06 * phase + 1));
+  ctx.save();
+  ctx.fillStyle = '#1a1a2e';
+  ctx.fillRect(ex - ew / 2, ey - slitH / 2, ew, slitH);
+  ctx.restore();
+}
+
 // Wrapper that applies pose transforms + eye-event overlay around the bird's draw.
 // Pose codes: 'idle' | 'flap' | 'dive' | 'scrunch' | 'lean'.
 //   - flap: vertical squish driven by state.flapPhase (0..1)
@@ -361,6 +381,8 @@ export function drawBirdWithState(bird, ctx, r, state) {
   bird.draw(ctx, r);
   if (state && state.eyeEvent && !reduced) {
     drawEyeOverlay(ctx, r, state.eyeEvent);
+  } else if (state && state.blinkPhase > 0 && !reduced) {
+    drawBlinkOverlay(ctx, r, state.blinkPhase, bird.id);
   }
   ctx.restore();
 }
