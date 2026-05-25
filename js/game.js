@@ -173,6 +173,7 @@ export class Game {
     this.shake.intensity = 0;
     this.popups = [];
     this.dyingTime = 0;
+    const _prevCombo = this.combo;
     this.combo = 0;
     this.comboPulse = 0;
     this.deathFlash = 0;
@@ -189,6 +190,7 @@ export class Game {
     this.runStartTime = 0;
     this.runDurationMs = 0;
     this.onCombo(0);
+    if (_prevCombo >= 5) this._setEyeEvent('comboBreak', 320);
 
     if (this.options.mode === 'custom' && this.options.level) {
       this.customPipes = (this.options.level.obstacles || []).map(o => ({ ...o }));
@@ -428,6 +430,7 @@ export class Game {
         this.lastNearMissPipeId = p.id;
         this.nearMisses += 1;
         this.onNearMiss(this.nearMisses);
+        this._setEyeEvent('nearMiss', 220);
         this.score += 2;            // bonus for risk
         audio.play('hover');        // quick whoosh
         this.shake.kick(3);
@@ -485,6 +488,7 @@ export class Game {
         c.collected = true;
         this.coinsCollected += 1;
         this.onCoin(this.coinsCollected);
+        this._setEyeEvent('coin', 280);
         this.score += 5;
         this.shake.kick(3);
         audio.play('score');
@@ -750,6 +754,11 @@ export class Game {
       if (Math.abs(by - gapTop) < 20 || Math.abs(by - gapBot) < 20) return true;
     }
     return false;
+  }
+
+  _setEyeEvent(event, ms = 250) {
+    this.birdState.eyeEvent = event;
+    this.birdState.eyeEventTtl = ms;
   }
 
   _updateBirdState(dt) {
