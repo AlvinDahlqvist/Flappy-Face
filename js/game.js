@@ -5,6 +5,7 @@ import { audio, ScreenShake, ParticleSystem, spawnConfetti, spawnFragments, spri
 import { BIRDS, PHOTO_BIRD_ID, getBird, drawWing, drawBirdWithState } from './birds.js';
 import { recordGameStart, recordDeath, recordScore, recordCustomComplete, recordCombo, recordCoins, recordNearMisses } from './achievements.js';
 import { pickTheme, buildScene, updateScene, drawScene, drawGround } from './scene.js';
+import { isReducedMotion } from './settings.js';
 
 const GRAVITY = 1600;
 const FLAP_VELOCITY = -480;
@@ -652,10 +653,11 @@ export class Game {
     // ===== pipes =====
     for (const p of this.pipes) {
       const px = p.x - this.scrollX;
-      const wobX = Math.sin(performance.now() * 0.03) * (p.wobble || 0) * 4;
+      const reduced = isReducedMotion();
+      const wobX = reduced ? 0 : Math.sin(performance.now() * 0.03) * (p.wobble || 0) * 4;
       const screenX = px + wobX;
       const rise = Math.min(1, (p.spawnAge || 0) / 250);
-      const yOffset = (1 - easeOutBack(rise)) * 80;
+      const yOffset = reduced ? 0 : (1 - easeOutBack(rise)) * 80;
       this.drawPipe(screenX, 0 + yOffset, PIPE_WIDTH, p.gapY - p.gap / 2, true, p.color);
       this.drawPipe(screenX, p.gapY + p.gap / 2 + yOffset, PIPE_WIDTH, this.groundY - (p.gapY + p.gap / 2), false, p.color);
     }
@@ -781,10 +783,15 @@ export class Game {
 
   _updateBirdState(dt) {
     // Decay flapPhase toward 0 with a spring so it overshoots back.
-    [this.birdState.flapPhase, this.birdState.flapPhaseV] = springStep(this.birdState.flapPhase, this.birdState.flapPhaseV, 0, dt / 1000, 240, 22);
-    if (Math.abs(this.birdState.flapPhase) < 0.002) {
+    if (isReducedMotion()) {
       this.birdState.flapPhase = 0;
       this.birdState.flapPhaseV = 0;
+    } else {
+      [this.birdState.flapPhase, this.birdState.flapPhaseV] = springStep(this.birdState.flapPhase, this.birdState.flapPhaseV, 0, dt / 1000, 240, 22);
+      if (Math.abs(this.birdState.flapPhase) < 0.002) {
+        this.birdState.flapPhase = 0;
+        this.birdState.flapPhaseV = 0;
+      }
     }
 
     // Eye event TTL countdown

@@ -2,6 +2,8 @@
 // Each bird has a `draw(ctx, radius)` that paints onto a coordinate system
 // where (0, 0) is the bird's center, and an `unlock` spec used by achievements.
 
+import { isReducedMotion } from './settings.js';
+
 export const PHOTO_BIRD_ID = 'photo';
 
 export const BIRDS = {
@@ -339,7 +341,8 @@ export function drawEyeOverlay(ctx, r, event) {
 //   - lean: small forward translate
 export function drawBirdWithState(bird, ctx, r, state) {
   ctx.save();
-  if (state) {
+  const reduced = isReducedMotion();
+  if (state && !reduced) {
     if (state.pose === 'flap') {
       const f = Math.max(0, Math.min(1, state.flapPhase));
       ctx.scale(1 - 0.25 * f, 1 + 0.18 * f);
@@ -352,7 +355,7 @@ export function drawBirdWithState(bird, ctx, r, state) {
     }
   }
   bird.draw(ctx, r);
-  if (state && state.eyeEvent) {
+  if (state && state.eyeEvent && !reduced) {
     drawEyeOverlay(ctx, r, state.eyeEvent);
   }
   ctx.restore();
