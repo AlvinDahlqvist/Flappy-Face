@@ -304,12 +304,12 @@
   <!-- Share modal -->
   <div class="modal" id="share-modal" hidden>
     <div class="modal-inner share-modal-inner">
+      <button class="share-x" id="share-close" data-glyph="close" aria-label="Close"></button>
       <h3>SHARE YOUR RUN</h3>
       <img class="share-preview" id="share-preview" alt="Your run" />
-      <div class="modal-buttons">
-        <button class="btn" id="share-close">Close</button>
-        <button class="btn" id="share-copy">Copy</button>
-        <button class="btn primary" id="share-download">Download</button>
+      <div class="modal-buttons share-actions">
+        <button class="btn" id="share-copy"><span class="icon" data-glyph="share"></span> COPY</button>
+        <button class="btn primary" id="share-download">DOWNLOAD</button>
       </div>
     </div>
   </div>
