@@ -322,3 +322,8 @@
   width: min(280px, 84vw);
   margin-top: 8px;
 }
+
+/* Combo-driven score aura — tier 0..3 */
+.score.combo-aura-1 { text-shadow: -3px 0 0 var(--frame-dark), 3px 0 0 var(--frame-dark), 0 -3px 0 var(--frame-dark), 0 3px 0 var(--frame-dark), 0 6px 0 rgba(0,0,0,0.4), 0 0 8px var(--accent); }
+.score.combo-aura-2 { text-shadow: -3px 0 0 var(--frame-dark), 3px 0 0 var(--frame-dark), 0 -3px 0 var(--frame-dark), 0 3px 0 var(--frame-dark), 0 6px 0 rgba(0,0,0,0.4), 0 0 16px var(--sunset); }
+.score.combo-aura-3 { text-shadow: -3px 0 0 var(--frame-dark), 3px 0 0 var(--frame-dark), 0 -3px 0 var(--frame-dark), 0 3px 0 var(--frame-dark), 0 6px 0 rgba(0,0,0,0.4), 0 0 24px var(--accent-2); }
