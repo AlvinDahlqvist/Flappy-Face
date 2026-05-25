@@ -628,16 +628,16 @@ export class Game {
   }
 
   checkCollision() {
-    if (this.bird.y + BIRD_RADIUS > this.groundY) return true;
-    if (this.bird.y - BIRD_RADIUS < 0) return true;
+    if (this.bird.y + BIRD_RADIUS > this.groundY) { this.birdState.recentDamageSource = 'ground'; return true; }
+    if (this.bird.y - BIRD_RADIUS < 0) { this.birdState.recentDamageSource = 'ground'; return true; }
 
     for (const p of this.pipes) {
       const px = p.x - this.scrollX;
       if (px + PIPE_WIDTH < this.bird.x - BIRD_RADIUS || px > this.bird.x + BIRD_RADIUS) continue;
       const topRect = { x: px, y: 0, w: PIPE_WIDTH, h: p.gapY - p.gap / 2 };
       const botRect = { x: px, y: p.gapY + p.gap / 2, w: PIPE_WIDTH, h: this.groundY - (p.gapY + p.gap / 2) };
-      if (circleRectHit(this.bird.x, this.bird.y, BIRD_RADIUS, topRect)) return true;
-      if (circleRectHit(this.bird.x, this.bird.y, BIRD_RADIUS, botRect)) return true;
+      if (circleRectHit(this.bird.x, this.bird.y, BIRD_RADIUS, topRect)) { this.birdState.recentDamageSource = 'topPipe'; return true; }
+      if (circleRectHit(this.bird.x, this.bird.y, BIRD_RADIUS, botRect)) { this.birdState.recentDamageSource = 'bottomPipe'; return true; }
     }
     return false;
   }
