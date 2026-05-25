@@ -100,6 +100,34 @@ export class Game {
     };
     // Trail of past bird positions for ghost/rainbow tells (oldest → newest).
     this.birdTrail = [];
+    // Bullet-time slowdown when a collision is imminent.
+    this.bulletTimeActive = false;
+    this.bulletTimeStart = 0;
+  }
+
+  // Project the bird ~stepMs ahead at current velocity + gravity.
+  // Returns true if a collision would land within that window.
+  _predictCollision(stepMs = 150) {
+    if (!this.bird) return false;
+    const steps = 3;
+    const subDt = stepMs / steps / 1000;   // seconds
+    let y = this.bird.y;
+    let vy = this.bird.vy;
+    const ahead = this.bird.x;
+    for (let i = 0; i < steps; i++) {
+      vy += GRAVITY * subDt;
+      y += vy * subDt;
+      if (y + this.bird.r >= this.groundY) return true;
+      for (const p of this.pipes) {
+        const px = p.x - this.scrollX;
+        if (ahead + this.bird.r < px) continue;
+        if (ahead - this.bird.r > px + PIPE_WIDTH) continue;
+        const gapTop = p.gapY - p.gap / 2;
+        const gapBot = p.gapY + p.gap / 2;
+        if (y - this.bird.r < gapTop || y + this.bird.r > gapBot) return true;
+      }
+    }
+    return false;
   }
 
   async start() {
@@ -252,6 +280,21 @@ export class Game {
   }
 
   update(dt) {
+    // Bullet-time: predict near-future collisions and slow dt for 150ms when imminent.
+    if (this.state === 'playing' && !this.bulletTimeActive && !isReducedMotion()) {
+      if (this._predictCollision(150)) {
+        this.bulletTimeActive = true;
+        this.bulletTimeStart = performance.now();
+      }
+    }
+    if (this.bulletTimeActive) {
+      if (performance.now() - this.bulletTimeStart >= 150) {
+        this.bulletTimeActive = false;
+      } else {
+        dt = dt * 0.25;
+      }
+    }
+
     this.timeElapsed += dt;
     this.particles.update(dt);
     this.shake.update(dt);
