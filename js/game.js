@@ -4,8 +4,16 @@ import { onFlap, fitCanvas } from './input.js';
 import { audio, ScreenShake, ParticleSystem, spawnConfetti, spawnFragments, springStep, spawnRingBurst } from './effects.js';
 import { BIRDS, PHOTO_BIRD_ID, getBird, drawWing, drawBirdWithState } from './birds.js';
 import { recordGameStart, recordDeath, recordScore, recordCustomComplete, recordCombo, recordCoins, recordNearMisses } from './achievements.js';
-import { pickTheme, buildScene, updateScene, drawScene, drawGround } from './scene.js';
-import { isReducedMotion } from './settings.js';
+import { THEMES, pickTheme, buildScene, updateScene, drawScene, drawGround } from './scene.js';
+import { isReducedMotion, settings } from './settings.js';
+
+// Fire a haptic vibration pattern, gated by the Settings toggle + browser support.
+// pattern: number (ms) or array of numbers (alternating vibrate/pause ms).
+function haptic(pattern) {
+  if (!settings.get('haptics')) return;
+  if (!navigator.vibrate) return;
+  try { navigator.vibrate(pattern); } catch {}
+}
 
 const GRAVITY = 1600;
 const FLAP_VELOCITY = -480;
@@ -141,7 +149,11 @@ export class Game {
     this.birdFragSource = buildBirdSprite(
       usePhoto ? this.assets.bird : null, this.birdMeta, BIRD_RADIUS, false,
     ).canvas;
-    this.theme = this.options.themeOverride || pickTheme();
+    // themeOverride can be a string id ('day'|'dusk'|'night') from Settings,
+    // an actual THEMES object, or null. Resolve to a theme object either way.
+    const override = this.options.themeOverride;
+    const resolvedOverride = typeof override === 'string' ? THEMES[override] : override;
+    this.theme = resolvedOverride || pickTheme();
     recordGameStart();
     this.resize();
     this.reset();
@@ -279,6 +291,7 @@ export class Game {
     this.bird.wingFlap = 1;
     this.flapsThisRun += 1;
     audio.play('flap');
+    haptic(8);
   }
 
   loop(now) {
@@ -498,6 +511,7 @@ export class Game {
         this.nearMisses += 1;
         this.onNearMiss(this.nearMisses);
         this._setEyeEvent('nearMiss', 0.22);
+        haptic(20);
         this.score += 2;            // bonus for risk
         audio.play('hover');        // quick whoosh
         this.shake.kick(3);
@@ -559,6 +573,7 @@ export class Game {
         this.score += 5;
         this.shake.kick(3);
         audio.play('score');
+        haptic(12);
         spawnConfetti(this.particles, sx, c.y, 12);
         spawnRingBurst(this.particles, sx, c.y, '#ffd166', 18);
         this.popups.push({
@@ -660,6 +675,7 @@ export class Game {
     audio.play('splat');
     this.shake.kick(18);
     this.deathFlash = 1;
+    haptic([40, 30, 40]);
     this.bird.vy = Math.max(this.bird.vy, -80);
     if (this.runStartTime) this.runDurationMs = performance.now() - this.runStartTime;
     // Persist score / new-best NOW so the overlay later has the right values.
