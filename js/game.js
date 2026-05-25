@@ -9,6 +9,8 @@ import { isReducedMotion, settings } from './settings.js';
 
 // Fire a haptic vibration pattern, gated by the Settings toggle + browser support.
 // pattern: number (ms) or array of numbers (alternating vibrate/pause ms).
+// Note: navigator.vibrate is supported on Android Chrome/Firefox but NOT iOS Safari.
+// Very short pulses (<10ms) are often ignored, so we use 15ms+ everywhere.
 function haptic(pattern) {
   if (!settings.get('haptics')) return;
   if (!navigator.vibrate) return;
@@ -302,7 +304,7 @@ export class Game {
     this.bird.wingFlap = 1;
     this.flapsThisRun += 1;
     audio.play('flap');
-    haptic(8);
+    haptic(15);
   }
 
   loop(now) {
@@ -522,7 +524,7 @@ export class Game {
         this.nearMisses += 1;
         this.onNearMiss(this.nearMisses);
         this._setEyeEvent('nearMiss', 0.22);
-        haptic(20);
+        haptic(30);
         this.score += 2;            // bonus for risk
         audio.play('hover');        // quick whoosh
         this.shake.kick(3);
@@ -584,7 +586,7 @@ export class Game {
         this.score += 5;
         this.shake.kick(3);
         audio.play('score');
-        haptic(12);
+        haptic(20);
         spawnConfetti(this.particles, sx, c.y, 12);
         spawnRingBurst(this.particles, sx, c.y, '#ffd166', 18);
         this.popups.push({
@@ -686,7 +688,7 @@ export class Game {
     audio.play('splat');
     this.shake.kick(18);
     this.deathFlash = 1;
-    haptic([40, 30, 40]);
+    haptic([60, 50, 80]);
     this.bird.vy = Math.max(this.bird.vy, -80);
     if (this.runStartTime) this.runDurationMs = performance.now() - this.runStartTime;
     // Persist score / new-best NOW so the overlay later has the right values.

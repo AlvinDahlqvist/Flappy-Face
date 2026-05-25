@@ -906,6 +906,18 @@ function refreshSettingsControls() {
     const btn = document.querySelector(`.pix-toggle[data-key="${key}"]`);
     if (btn) btn.setAttribute('aria-pressed', String(!!settings.get(key)));
   }
+  // Haptics support hint — Android Chrome supports navigator.vibrate; iOS Safari doesn't.
+  const hint = document.getElementById('haptics-support-hint');
+  if (hint) {
+    if (navigator.vibrate) {
+      hint.textContent = '(Android)';
+      hint.classList.remove('unsupported');
+    } else {
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      hint.textContent = isIOS ? '(iOS doesn’t support web vibration)' : '(not supported)';
+      hint.classList.add('unsupported');
+    }
+  }
   document.getElementById('set-reducedMotion').value = String(settings.get('reducedMotion'));
   document.getElementById('set-themeLock').value = settings.get('themeLock');
 }
@@ -937,6 +949,23 @@ function wireSettings() {
   document.getElementById('set-themeLock').addEventListener('change', (e) => {
     settings.set('themeLock', e.target.value);
   });
+
+  // Haptics test — fires a small pattern so the user can verify their device + setting.
+  const testBtn = document.getElementById('haptics-test');
+  if (testBtn) {
+    testBtn.addEventListener('click', () => {
+      if (!navigator.vibrate) {
+        testBtn.textContent = 'UNSUPPORTED';
+        setTimeout(() => { testBtn.textContent = 'TEST'; }, 1200);
+        return;
+      }
+      const wasEnabled = settings.get('haptics');
+      // Fire a clearly perceptible 3-pulse pattern regardless of toggle state.
+      try { navigator.vibrate([40, 50, 40, 50, 80]); } catch {}
+      testBtn.textContent = wasEnabled ? 'BUZZED' : 'BUZZED (toggle ON to use)';
+      setTimeout(() => { testBtn.textContent = 'TEST'; }, 1600);
+    });
+  }
 
   document.getElementById('settings-reset').addEventListener('click', () => {
     if (!confirm('Reset EVERYTHING — photos, levels, unlocks, settings?')) return;

@@ -236,8 +236,11 @@
       <section class="settings-group pix-frame">
         <h3>FEEL</h3>
         <div class="setting-row">
-          <label for="set-haptics">Haptics (mobile)</label>
-          <button class="pix-toggle" id="set-haptics" data-key="haptics"></button>
+          <label for="set-haptics">Haptics <span id="haptics-support-hint" class="setting-hint"></span></label>
+          <div class="setting-actions">
+            <button class="btn small ghost" id="haptics-test">TEST</button>
+            <button class="pix-toggle" id="set-haptics" data-key="haptics"></button>
+          </div>
         </div>
         <div class="setting-row">
           <label for="set-scanlines">Scanlines</label>
