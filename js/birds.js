@@ -284,6 +284,53 @@ function tailFeathers(ctx, r, fill, stroke = '#1a1a2e', style = 'fan') {
   ctx.restore();
 }
 
+// Event-driven eye overlay. Drawn ON TOP of the bird's normal eyes for one frame.
+// `event` is one of: 'coin' | 'nearMiss' | 'comboBreak'.
+export function drawEyeOverlay(ctx, r, event) {
+  if (!event) return;
+  const eyeX = pxSnap(r * 0.30);
+  const eyeY = pxSnap(-r * 0.18);
+  const er   = pxSnap(r * 0.30);
+  if (event === 'coin') {
+    ctx.fillStyle = '#fff';
+    ctx.strokeStyle = '#1a1a2e';
+    ctx.lineWidth = Math.max(1.5, r * 0.06);
+    ctx.beginPath();
+    ctx.arc(eyeX, eyeY, er, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#1a8a45';
+    ctx.font = `bold ${pxSnap(r * 0.55)}px "Bungee", system-ui`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('$', eyeX, eyeY + 1);
+  } else if (event === 'nearMiss') {
+    ctx.fillStyle = '#fff';
+    ctx.strokeStyle = '#1a1a2e';
+    ctx.lineWidth = Math.max(1.5, r * 0.06);
+    ctx.beginPath();
+    ctx.arc(eyeX, eyeY, pxSnap(r * 0.38), 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#1a1a2e';
+    ctx.beginPath();
+    ctx.arc(eyeX, eyeY, pxSnap(r * 0.08), 0, Math.PI * 2);
+    ctx.fill();
+  } else if (event === 'comboBreak') {
+    ctx.strokeStyle = '#1a1a2e';
+    ctx.lineWidth = Math.max(2.5, r * 0.10);
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(pxSnap(r * 0.05), pxSnap(-r * 0.32));
+    ctx.lineTo(pxSnap(r * 0.55), pxSnap(-r * 0.08));
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(239, 71, 111, 0.4)';
+    ctx.beginPath();
+    ctx.arc(eyeX, eyeY, pxSnap(r * 0.45), 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
 // ============ BIRDS ============
 
 function drawBuddy(ctx, r) {
