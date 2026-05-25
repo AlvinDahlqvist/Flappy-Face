@@ -26,6 +26,12 @@ const PIPE_PALETTE = [
   { fill: '#06d6a0', dark: '#04a17b', edge: '#02604a' }, // mint
 ];
 
+function easeOutBack(t) {
+  const c1 = 1.70158;
+  const c3 = c1 + 1;
+  return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+}
+
 export class Game {
   constructor(canvas, options) {
     this.canvas = canvas;
@@ -648,8 +654,10 @@ export class Game {
       const px = p.x - this.scrollX;
       const wobX = Math.sin(performance.now() * 0.03) * (p.wobble || 0) * 4;
       const screenX = px + wobX;
-      this.drawPipe(screenX, 0, PIPE_WIDTH, p.gapY - p.gap / 2, true, p.color);
-      this.drawPipe(screenX, p.gapY + p.gap / 2, PIPE_WIDTH, this.groundY - (p.gapY + p.gap / 2), false, p.color);
+      const rise = Math.min(1, (p.spawnAge || 0) / 250);
+      const yOffset = (1 - easeOutBack(rise)) * 80;
+      this.drawPipe(screenX, 0 + yOffset, PIPE_WIDTH, p.gapY - p.gap / 2, true, p.color);
+      this.drawPipe(screenX, p.gapY + p.gap / 2 + yOffset, PIPE_WIDTH, this.groundY - (p.gapY + p.gap / 2), false, p.color);
     }
 
     // ===== coins (between pipes, before ground) =====
