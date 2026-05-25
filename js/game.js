@@ -735,6 +735,23 @@ export class Game {
     ctx.restore();
   }
 
+  // Returns true if the bird is currently inside the horizontal span of a pipe pair
+  // AND vertically close to either the top or bottom obstacle edge (within 20px).
+  _birdInGap() {
+    if (!this.pipes || !this.pipes.length) return false;
+    const bx = this.bird.x;
+    const by = this.bird.y;
+    for (const p of this.pipes) {
+      const px = p.x - this.scrollX;
+      if (bx + this.bird.r < px) continue;
+      if (bx - this.bird.r > px + PIPE_WIDTH) continue;
+      const gapTop = p.gapY - p.gap / 2;
+      const gapBot = p.gapY + p.gap / 2;
+      if (Math.abs(by - gapTop) < 20 || Math.abs(by - gapBot) < 20) return true;
+    }
+    return false;
+  }
+
   _updateBirdState(dt) {
     // Decay flapPhase toward 0 with a spring so it overshoots back.
     [this.birdState.flapPhase, this.birdState.flapPhaseV] = springStep(this.birdState.flapPhase, this.birdState.flapPhaseV, 0, dt / 1000, 240, 22);
@@ -754,8 +771,17 @@ export class Game {
     // Combo tier (0..3) — placeholder pose handling (Task B.3 refines)
     const c = this.combo || 0;
     this.birdState.comboTier = c >= 15 ? 3 : c >= 10 ? 2 : c >= 5 ? 1 : 0;
-    if (this.birdState.flapPhase > 0.05) this.birdState.pose = 'flap';
-    else this.birdState.pose = 'idle';
+    // Pose — precedence: dive > scrunch > flap > lean > idle.
+    const inDive = this.bird.vy > 8;
+    const inFlap = this.birdState.flapPhase > 0.05;
+    const highCombo = (this.combo || 0) >= 5;
+    const inScrunch = this._birdInGap();
+
+    if (inDive)         this.birdState.pose = 'dive';
+    else if (inScrunch) this.birdState.pose = 'scrunch';
+    else if (inFlap)    this.birdState.pose = 'flap';
+    else if (highCombo) this.birdState.pose = 'lean';
+    else                this.birdState.pose = 'idle';
 
     // Push current bird position into trail for tells in Phase D.
     if (this.bird) {
