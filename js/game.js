@@ -348,6 +348,8 @@ export class Game {
     this.updateCoins(dt);
 
     for (const p of this.pipes) {
+      p.wobble *= 0.93;
+      p.spawnAge = (p.spawnAge ?? 0) + dt;
       if (!p.scored && p.x + PIPE_WIDTH < this.scrollX + this.bird.x) {
         p.scored = true;
         this.score += 1;
@@ -430,6 +432,7 @@ export class Game {
       const d = Math.min(distTop, distBot);
       if (d < NEAR_MISS) {
         p.nearMissed = true;
+        p.wobble = 1;
         this.lastNearMissPipeId = p.id;
         this.nearMisses += 1;
         this.onNearMiss(this.nearMisses);
@@ -522,6 +525,7 @@ export class Game {
           this.pipes.push({
             id: p.x, x: p.x, gapY: p.gapY, gap: this.customGap,
             scored: false, color: PIPE_PALETTE[0],
+            wobble: 0, spawnAge: 0,
           });
         }
       }
@@ -567,6 +571,7 @@ export class Game {
           gap,
           scored: false,
           color: PIPE_PALETTE[Math.floor(Math.random() * PIPE_PALETTE.length)],
+          wobble: 0, spawnAge: 0,
         });
       }
     }
@@ -641,8 +646,10 @@ export class Game {
     // ===== pipes =====
     for (const p of this.pipes) {
       const px = p.x - this.scrollX;
-      this.drawPipe(px, 0, PIPE_WIDTH, p.gapY - p.gap / 2, true, p.color);
-      this.drawPipe(px, p.gapY + p.gap / 2, PIPE_WIDTH, this.groundY - (p.gapY + p.gap / 2), false, p.color);
+      const wobX = Math.sin(performance.now() * 0.03) * (p.wobble || 0) * 4;
+      const screenX = px + wobX;
+      this.drawPipe(screenX, 0, PIPE_WIDTH, p.gapY - p.gap / 2, true, p.color);
+      this.drawPipe(screenX, p.gapY + p.gap / 2, PIPE_WIDTH, this.groundY - (p.gapY + p.gap / 2), false, p.color);
     }
 
     // ===== coins (between pipes, before ground) =====
