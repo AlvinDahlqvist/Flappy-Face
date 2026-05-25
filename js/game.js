@@ -222,6 +222,9 @@ export class Game {
   handleFlap() {
     if (this.paused) return;
     if (this.state !== 'playing') return;
+    // Visual squish impulse — drives birdState.pose='flap' for the next 200-300ms.
+    this.birdState.flapPhase = 1;
+    this.birdState.flapPhaseV = -6;
     this.bird.vy = FLAP_VELOCITY;
     this.bird.squashX = 0.78;
     this.bird.squashY = 1.30;
